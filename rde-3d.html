@@ -1,0 +1,662 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark light">
+<title>RDE / Reduced-order WebGL observatory</title>
+<style>
+  :root{--bg:#09131e;--panel:rgba(14,27,40,.94);--panel-soft:rgba(14,27,40,.79);--ink:#edf5fc;--muted:#a6b9cb;--line:#314658;--accent:#82caff;--input:#172b3b;--warm:#ffc28d;--blue:#45afff;--green:#62d7a3;--red:#ff7d89;--shadow:0 12px 36px #0004}
+  :root[data-theme="light"]{--bg:#e8eef3;--panel:rgba(251,253,255,.96);--panel-soft:rgba(251,253,255,.85);--ink:#153044;--muted:#496579;--line:#bacbd8;--accent:#086798;--input:#e5edf3;--warm:#8a4514;--blue:#076daf;--green:#087348;--red:#ae2d40;--shadow:0 12px 36px #16344b16}
+  *{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden}body{background:var(--bg);color:var(--ink);font:13px/1.45 "Segoe UI",system-ui,sans-serif}button,select,input{font:inherit}button,select{border:1px solid var(--line);border-radius:6px;color:var(--ink);background:var(--input)}button{cursor:pointer;padding:7px 10px}button:hover,select:hover{border-color:var(--accent)}button:focus-visible,select:focus-visible,input:focus-visible,canvas:focus-visible,summary:focus-visible{outline:3px solid var(--accent);outline-offset:3px}button[aria-pressed="true"],button[aria-checked="true"]{color:var(--accent);border-color:var(--accent);background:var(--input);box-shadow:inset 0 -2px var(--accent)}button:disabled{opacity:.45;cursor:default}input[type="range"]{accent-color:var(--accent);min-width:0}input[type="checkbox"]{accent-color:var(--accent)}select{padding:6px 8px;max-width:100%}[hidden]{display:none!important}
+  #viewport{position:relative;width:100%;height:100%;isolation:isolate}#scene{display:block;width:100%;height:100%;touch-action:none;outline-offset:-4px}.masthead{position:absolute;z-index:4;left:18px;right:18px;top:15px;display:flex;gap:20px;align-items:flex-start;justify-content:space-between;pointer-events:none}.masthead>*{pointer-events:auto}.brand{max-width:640px;padding:10px 14px;background:var(--panel-soft);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow)}.eyebrow{font-size:9px;font-weight:750;letter-spacing:.15em;color:var(--accent);text-transform:uppercase}h1{font-size:23px;line-height:1.1;letter-spacing:-.035em;margin:5px 0 5px}h1 span{font-weight:350;color:var(--muted)}.brand p{font-size:10px;margin:0;color:var(--muted)}.top-actions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}.top-actions button{background:var(--panel);font-size:11px;box-shadow:var(--shadow)}
+  .telemetry-panel{position:absolute;z-index:3;top:130px;width:258px;max-height:calc(100% - 338px);overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);padding:13px}.telemetry-panel.left{left:18px}.telemetry-panel.right{right:18px}.panel-kicker{display:flex;justify-content:space-between;gap:7px;align-items:center;font-size:9px;letter-spacing:.08em;font-weight:750;color:var(--accent);text-transform:uppercase}.panel-kicker b{font-size:8px;color:var(--warm);border:1px dashed var(--warm);padding:2px 4px;border-radius:3px;white-space:nowrap}.telemetry-panel h2{font-size:14px;line-height:1.2;margin:8px 0 4px}.telemetry-panel p{font-size:10px;color:var(--muted);margin:5px 0 9px}.graph{display:block;width:100%;height:218px}.graph.trace{height:220px}.cycle-key{display:grid;grid-template-columns:1fr 1fr;gap:7px 5px;font-size:9px;color:var(--muted);margin-top:9px}.cycle-key span{display:flex;gap:5px;align-items:center}.key{display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--blue)}.key.front{background:var(--red);transform:rotate(45deg);width:7px;height:7px;margin:1px}.key.product{background:#cda46e;border-radius:50%}.key.recovery{background:var(--green);border:1px dashed var(--ink)}.metric{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:10px;color:var(--muted);padding:9px 0 4px;border-top:1px solid var(--line);margin-top:9px}.metric strong{color:var(--ink);font-variant-numeric:tabular-nums}.meter{height:4px;border-radius:3px;background:var(--line);margin:5px 0 7px;overflow:hidden}.meter span{display:block;height:100%;width:0;background:var(--accent)}.probe-key{font-size:9px;display:flex;gap:9px;flex-wrap:wrap;color:var(--muted)}.probe-key b{font-weight:500}.panel-note{border-top:1px dashed var(--line);padding-top:8px}
+  .status-card{position:absolute;left:50%;top:125px;transform:translateX(-50%);z-index:3;max-width:calc(100% - 590px);min-width:270px;text-align:center;pointer-events:none;background:var(--panel-soft);border:1px solid var(--line);border-radius:8px;padding:8px 14px}.status-card strong{display:block;font-size:13px}.status-card p{font-size:10px;color:var(--muted);margin:3px 0}.status-card .stage-track{display:flex;justify-content:center;gap:12px;margin-top:6px;font-size:9px;color:var(--muted)}.stage-track span{border-bottom:2px solid var(--line);padding-bottom:3px}.stage-track span.active{color:var(--accent);border-color:var(--accent)}#model-warning{color:var(--warm)}
+  .controls{position:absolute;z-index:5;left:18px;right:18px;bottom:49px;background:var(--panel);border:1px solid var(--line);border-radius:11px;box-shadow:var(--shadow);padding:12px 15px}.control-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.control-row+.control-row{border-top:1px solid var(--line);padding-top:10px;margin-top:10px}.control{display:flex;gap:7px;align-items:center;font-size:11px}.control.column{align-items:flex-start;flex-direction:column;gap:4px}.control small,.control-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}.control input[type=range]{width:140px}.control.wide input[type=range]{width:175px}.button-group{display:flex;gap:4px}.button-group button{font-size:11px;padding:6px 9px}.control-spacer{flex:1}.control output{font-variant-numeric:tabular-nums;color:var(--accent);min-width:29px}.toggle{display:flex;align-items:center;gap:5px;font-size:11px}.camera-help{font-size:10px;color:var(--muted);max-width:260px}.camera-help b{font-weight:650;color:var(--ink)}.focus-control select{max-width:170px;font-size:11px}.mode-note{font-size:9px;color:var(--muted);margin:8px 0 0}
+  #callout-lines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}#labels{position:absolute;inset:0;pointer-events:none;z-index:2}.part-label{position:absolute;padding:5px 8px;background:var(--panel);border:1px solid var(--line);color:var(--ink);font-size:10px;border-radius:6px;pointer-events:auto;white-space:nowrap;box-shadow:0 2px 10px #0002}.part-label .number{display:inline-block;border:1px solid var(--accent);border-radius:50%;width:16px;height:16px;font-size:9px;line-height:14px;text-align:center;margin-right:5px;color:var(--accent)}.part-label[aria-pressed="true"]{border-color:var(--accent)}.part-label:hover{border-color:var(--accent)}
+  .footer{position:absolute;z-index:5;left:18px;right:18px;bottom:9px;min-height:27px;padding:5px 10px;border:1px solid var(--line);border-radius:6px;background:var(--panel);font-size:10px;color:var(--muted);text-align:center}.loading{position:absolute;z-index:10;inset:0;background:var(--bg);display:grid;place-items:center;padding:24px}.loading-box{max-width:540px;padding:25px;border:1px solid var(--line);border-radius:14px;background:var(--panel);box-shadow:var(--shadow)}.loading-box h2{font-size:24px;margin:7px 0}.loading-box p{color:var(--muted)}.loading-box code{font-size:11px;white-space:normal;word-break:break-word}.loading-box button{margin-top:8px}.sr-only{position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden}.details-dialog{border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--ink);max-width:580px;width:calc(100% - 36px);padding:22px;box-shadow:var(--shadow)}.details-dialog::backdrop{background:#0008}.details-dialog h2{margin:0 36px 8px 0;font-size:22px}.details-dialog p{color:var(--muted);font-size:12px}.details-dialog .close{float:right}.details-dialog dt{font-size:10px;text-transform:uppercase;color:var(--accent);margin-top:12px}.details-dialog dd{font-size:12px;margin:4px 0 0}.details-dialog .warning{border-left:3px solid var(--warm);padding-left:10px}.telemetry-hidden .telemetry-panel{display:none}.telemetry-hidden .status-card{max-width:600px}
+  @media(max-width:1150px){.telemetry-panel{width:218px;padding:10px}.status-card{max-width:calc(100% - 492px);min-width:230px}.control-row{gap:9px}.control input[type=range]{width:115px}.control.wide input[type=range]{width:135px}.graph{height:190px}.graph.trace{height:197px}.brand{max-width:530px}.camera-help{max-width:180px}.top-actions{max-width:180px}}
+  @media(max-width:850px){.telemetry-panel{display:none}.panels-forced .telemetry-panel{display:block;width:calc(50% - 25px);top:117px;max-height:280px}.status-card{top:117px;max-width:calc(100% - 36px);min-width:0;width:320px}.panels-forced .status-card{display:none}.brand p{display:none}.masthead{left:10px;right:10px;top:10px}.brand{max-width:65%;padding:8px 10px}h1{font-size:19px}.top-actions button{font-size:10px;padding:5px 7px}.top-actions{max-width:30%}.controls{left:10px;right:10px;padding:9px 10px;bottom:62px}.footer{left:10px;right:10px;font-size:9px;bottom:8px}.camera-help{display:none}.control-spacer{display:none}.control input[type=range]{width:95px}.control.wide input[type=range]{width:110px}.focus-control{display:none}.control-row{gap:7px}.control-label{font-size:8px}.mode-note{font-size:8px}.status-card p{font-size:9px}}
+  @media(max-height:710px) and (min-width:851px){.telemetry-panel{top:115px;max-height:calc(100% - 306px)}.graph{height:150px}.graph.trace{height:155px}.telemetry-panel h2{font-size:12px}.telemetry-panel .panel-note{display:none}.status-card{top:115px}.brand p{display:none}.controls{padding:9px 12px}.control-row+.control-row{padding-top:7px;margin-top:7px}}
+  @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<main id="viewport" aria-label="Interactive three-dimensional RDE visualisation">
+  <canvas id="scene" tabindex="0" aria-label="3D RDE. Drag to orbit; Shift-drag or right-drag to pan; scroll to zoom. Arrow keys orbit; Shift plus arrows pan; plus and minus zoom; Home resets."></canvas>
+  <svg id="callout-lines" aria-hidden="true"></svg>
+  <div id="labels" aria-label="Camera focus callouts"></div>
+  <header class="masthead">
+    <div class="brand"><div class="eyebrow">PlayCanvas 2.5.0 / procedural WebGL</div><h1>Rotating detonation <span>Observatory</span></h1><p>REDUCED-ORDER ANIMATION / UNITLESS / SCHEMATIC, NOT TO SCALE</p></div>
+    <div class="top-actions"><button id="reset-view">Reset view</button><button id="toggle-panels" aria-pressed="true">Telemetry</button><button id="theme" aria-pressed="true">Dark theme</button><button id="about">Model &amp; limits</button></div>
+  </header>
+  <aside class="telemetry-panel left" aria-labelledby="strip-heading">
+    <div class="panel-kicker">Shared angular state <b>NOT CFD</b></div><h2 id="strip-heading">Unrolled periodic annulus</h2><p>Same fronts and sector recovery as the 3D view. Right edge reconnects to left.</p>
+    <canvas id="strip" class="graph" role="img" aria-label="Live unrolled periodic strip showing fresh-layer height, moving fronts, products and attached oblique shocks."></canvas>
+    <div class="cycle-key"><span><i class="key"></i>Fresh reactants</span><span><i class="key front"></i>Front</span><span><i class="key product"></i>Expanding products</span><span><i class="key recovery"></i>Recovery / refill</span></div>
+    <div class="metric"><span>Sector at reference mark</span><strong id="sector-state">Initial fill</strong></div>
+    <div class="metric"><span>Fresh-layer recovery</span><strong id="fresh-readout">0.00</strong></div>
+    <p class="panel-note">Height, pulses and flow markers are dimensionless model states, not geometry specifications or field solutions.</p>
+  </aside>
+  <aside class="telemetry-panel right" aria-labelledby="trace-heading">
+    <div class="panel-kicker">Virtual probes <b>ILLUSTRATIVE, NOT DATA</b></div><h2 id="trace-heading">Pulse &amp; timing observatory</h2><p>Four angular probes and a luminosity-style proxy. Synthetic signals only.</p>
+    <canvas id="traces" class="graph trace" role="img" aria-label="Four normalized virtual probe pulse traces and a synthetic luminosity trace; no experimental data."></canvas>
+    <div class="probe-key"><b>P1 / solid</b><b>P2 / dashed</b><b>P3 / dotted</b><b>P4 / dash-dot</b></div>
+    <div class="metric"><span>Model timing consistency</span><strong id="consistency">Collecting passes</strong></div><div class="meter"><span id="consistency-meter"></span></div>
+    <p id="trace-caveat">Regularity is a property of this animation, not evidence of detonation.</p>
+    <p class="panel-note">Glow or pressure oscillations alone do not establish rotating detonation. Actual evidence requires qualified measurement and interpretation.</p>
+  </aside>
+  <section class="status-card" aria-label="Animation state">
+    <strong id="wave-status">One circulating wave</strong><p id="stage-status">Abstract startup progression; not an initiation sequence.</p>
+    <div class="stage-track"><span data-stage="initiation">Initiation</span><span data-stage="transient">Transient</span><span data-stage="stable">Stable visual state</span></div>
+    <p id="model-warning">No dimensional or operating values are represented.</p>
+  </section>
+  <section id="controls" class="controls" aria-label="Simulation and view controls">
+    <div class="control-row">
+      <div class="button-group" aria-label="Playback"><button id="play" aria-label="Pause animation">Pause</button><button id="step">Step</button><button id="replay">Replay startup</button></div>
+      <div class="control column"><span class="control-label">Playback scale</span><div class="button-group" role="group" aria-label="Slow motion"><button data-scale="0.25" aria-pressed="false">0.25x</button><button data-scale="0.5" aria-pressed="false">0.5x</button><button data-scale="1" aria-pressed="true">1x</button></div></div>
+      <label class="control wide column" for="speed"><span class="control-label">Wave speed / visual scale <output id="speed-value" for="speed">0.45</output></span><input id="speed" type="range" min="0" max="1" step="0.01" value="0.45"></label>
+      <label class="control column" for="wave-mode"><span class="control-label">Wave organization</span><select id="wave-mode"><option value="one">1 wave</option><option value="two">2 co-rotating</option><option value="three">3 co-rotating</option><option value="counter">Counter-rotating</option></select></label>
+      <label class="toggle"><input id="nonideal" type="checkbox">Non-ideal effects</label>
+      <div class="control-spacer"></div>
+      <div class="camera-help"><b>Drag</b> orbit / <b>Shift-drag</b> pan / <b>scroll</b> zoom<br>Focus a numbered label. All hardware remains stationary.</div>
+    </div>
+    <div class="control-row">
+      <div class="control column"><span class="control-label">Rendering profile</span><div class="button-group" role="group" aria-label="Rendering profile"><button data-view="solid" aria-pressed="false">Solid mesh</button><button data-view="glass" aria-pressed="true">Glass / X-ray</button><button data-view="section" aria-pressed="false">Half-shell cut</button></div></div>
+      <label class="control column" for="explode"><span class="control-label">Exploded separation / visual <output id="explode-value" for="explode">0.00</output></span><input id="explode" type="range" min="0" max="1" step="0.01" value="0"></label>
+      <label class="toggle"><input id="centrebody" type="checkbox" checked>Exhaust centrebody</label>
+      <label class="toggle"><input id="callouts" type="checkbox" checked>Callouts</label>
+      <label class="control column focus-control" for="focus-part"><span class="control-label">Focus part</span><select id="focus-part"><option value="">Choose a component</option></select></label>
+      <div class="control-spacer"></div><span id="motion-status" class="control-label" role="status">Loading</span>
+    </div>
+    <p id="view-note" class="mode-note">TBD: set by reviewed design. No injector patterns, initiation methods or operational procedures are represented.</p>
+  </section>
+  <footer class="footer">Conceptual illustration. Not a design. Hardware design and hazardous operation require qualified institutional review.</footer>
+  <div id="loading" class="loading" role="status"><div class="loading-box"><div class="eyebrow">RDE observatory</div><h2 id="load-heading">Preparing the scene</h2><p id="load-message">Loading pinned PlayCanvas 2.5.0 from its CDN. An internet connection is required for the engine runtime.</p><code id="load-detail"></code><br><button id="retry" hidden>Reload</button></div></div>
+  <div id="announcement" class="sr-only" aria-live="polite"></div>
+</main>
+<dialog id="about-dialog" class="details-dialog" aria-labelledby="about-heading"><button id="close-about" class="close" aria-label="Close model information">Close</button><h2 id="about-heading">What this model means</h2>
+  <p>This is a schematic reduced-order visualisation, not a CFD solver or a validated propulsion simulation. Every quantity is unitless; scene coordinates are drawing coordinates only.</p>
+  <dl><dt>Wave kinematics</dt><dd>Angular phase advances on one shared visual clock. Co-rotating waves have equal nominal separation. Counter-rotating waves are an illustrative interaction mode, not a claim of a stable physical solution.</dd>
+  <dt>Sector state</dt><dd>A passing front consumes the local fresh layer. Following a short normalized recovery delay, its height relaxes toward a fill target. A decaying pulse and angular front envelope generate the virtual signals.</dd>
+  <dt>Startup</dt><dd>Initiation, transient and settled visual states are presentation stages only. The interface marker does not depict any initiation method, hardware design or procedure.</dd>
+  <dt>Non-idealities</dt><dd>Incomplete mixing changes fill uniformity; parasitic combustion adds diffuse warm patches; leakage sends blue markers downstream; wall loss reduces local intensity; temporary wave-count changes disrupt visual timing. These are qualitative perturbations, not predictions.</dd>
+  <dt>Synchronization &amp; controls</dt><dd>The 3D fronts, unrolled strip and probe signals consume the same model state. Wave speed adjusts the shared visual clock, not a physical detonation velocity. At zero the clock is held. Pause and reduced-motion preferences stop automatic motion.</dd>
+  <dt>Display conventions</dt><dd>Transparent and exploded hardware is a visualization aid. In exploded mode, flow remains in the chamber reference frame. All construction and operating details: TBD: set by reviewed design.</dd>
+  <dt>Runtime</dt><dd>PlayCanvas 2.5.0, MIT-licensed, loaded from an exact-version CDN URL with integrity checking. Geometry, shaders, particles and graphs are generated locally; no other network assets are used.</dd></dl>
+  <p class="warning">Conceptual illustration. Not a design. Hardware design and hazardous operation require qualified institutional review.</p>
+</dialog>
+<noscript>This visualisation requires JavaScript and WebGL. Enable JavaScript and reload.</noscript>
+<script>
+function showLoadError(message,detail){
+  document.getElementById('loading').hidden=false;
+  document.getElementById('load-heading').textContent='The scene could not start';
+  document.getElementById('load-message').textContent=message;
+  document.getElementById('load-detail').textContent=detail||'';
+  document.getElementById('retry').hidden=false;
+}
+document.getElementById('retry').addEventListener('click',()=>location.reload());
+</script>
+<script src="https://cdn.jsdelivr.net/npm/playcanvas@2.5.0/build/playcanvas.min.js" integrity="sha384-vEPKOdRIm502QNea5lyLv+0kDSGT3heVmq1MO/7CXeetsY+BTLBO7W5DB99zJfwd" crossorigin="anonymous" referrerpolicy="no-referrer" onerror="showLoadError('The pinned PlayCanvas runtime could not be loaded. Check your internet connection or CDN access, then reload.','Required: cdn.jsdelivr.net / playcanvas@2.5.0')"></script>
+<script>
+'use strict';
+(()=>{
+  const $=id=>document.getElementById(id);
+  if(!window.pc)return;
+  const TAU=Math.PI*2,DEG=180/Math.PI,SECTORS=72;
+  const drawing={axialSpan:4.45,freshMin:.028,freshSpan:1.10,frontMin:.82,frontSpan:.24,shockAxial:2.91,shockSweep:1.25};
+  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+  const wrap=v=>((v%TAU)+TAU)%TAU;
+  const distance=(a,b)=>Math.abs(Math.atan2(Math.sin(a-b),Math.cos(a-b)));
+  const smooth=(a,b,t)=>a+(b-a)*(1-Math.exp(-t));
+  const palette={fresh:[.13,.54,1],front:[1,.24,.32],products:[.93,.51,.23],recovery:[.16,.79,.48],grey:[.49,.61,.70]};
+  const partInfo=[
+    {id:'plenum',name:'Feed plenum',anchor:[0,1.7,-2.75],separation:-1.8,focus:7.8},
+    {id:'injection',name:'Injection plane',anchor:[1.50,.35,-2.22],separation:-1.05,focus:6.8},
+    {id:'chamber',name:'Annular chamber',anchor:[1.6,.45,.10],separation:0,focus:9.8},
+    {id:'inner',name:'Inner body',anchor:[.05,.95,.5],separation:.30,focus:7.4},
+    {id:'exhaust',name:'Exhaust / centrebody',anchor:[.9,1.1,2.85],separation:1.75,focus:8.2},
+    {id:'initiation',name:'Initiation port',anchor:[-1.20,-1.15,-1.72],separation:-.48,focus:6.8},
+    {id:'instruments',name:'Instrument ports',anchor:[0,1.72,-.65],separation:.55,focus:7.4}
+  ];
+  class WaveModel{
+    constructor(){this.mode='one';this.nonideal=false;this.targetSpeed=.45;this.speed=.45;this.scale=1;this.playing=!matchMedia('(prefers-reduced-motion: reduce)').matches;this.replay();}
+    replay(){
+      this.time=0;this.phase=0;this.stage='initiation';this.waves=[];this.previous=[];
+      this.sectors=Array.from({length:SECTORS},(_,i)=>({angle:i*TAU/SECTORS,height:.85,age:10,pulse:0,state:'fresh'}));
+      this.passages=[];this.samples=[];this.sampleTime=0;this.luminosity=0;this.interaction=0;this.buildWaves();
+    }
+    requestedCount(){return {one:1,two:2,three:3,counter:2}[this.mode];}
+    buildWaves(){
+      let count=this.requestedCount();
+      if(this.time<.75)count=1;
+      if(this.nonideal&&this.time>3.2&&this.mode!=='counter'&&Math.floor((this.time-3.2)/2.8)%3===0)count=count===3?2:count+1;
+      const energy=clamp(this.time/.95,.12,1);
+      this.stage=this.time<.75?'initiation':this.time<3.0?'transient':'stable';
+      const transient=this.stage==='transient'?.075*Math.sin(this.time*7)*(1-(this.time-.75)/2.25):0;
+      this.waves=Array.from({length:count},(_,i)=>{
+        const direction=this.mode==='counter'&&i===1?-1:1;
+        const jitter=this.nonideal?.09*Math.sin(this.time*2.1+i*2.4):0;
+        const angle=wrap(-2.36+direction*this.phase+i*TAU/count+transient*(i+1)+jitter);
+        const loss=this.nonideal?.18*(.5+.5*Math.sin(angle*3+this.time)):0;
+        return {angle,direction,energy:energy*(1-loss)};
+      });
+      this.interaction=this.mode==='counter'&&count===2?Math.exp(-Math.pow(distance(this.waves[0].angle,this.waves[1].angle)/.17,2)):0;
+    }
+    update(wallDt,force=false){
+      if(!this.playing&&!force)return false;
+      this.speed=force?this.speed:smooth(this.speed,this.targetSpeed,wallDt*6);
+      if(Math.abs(this.speed-this.targetSpeed)<.001)this.speed=this.targetSpeed;
+      const dt=force?.035:Math.min(wallDt,.06)*this.scale*this.speed;
+      if(dt<=0)return false;
+      const steps=Math.max(1,Math.ceil(dt/.01)),h=dt/steps;
+      for(let k=0;k<steps;k++)this.integrate(h);
+      return true;
+    }
+    integrate(dt){
+      const oldWaves=this.waves.map(w=>({...w}));
+      this.time+=dt;this.phase=wrap(this.phase+TAU*.64*dt);this.buildWaves();
+      const changed=oldWaves.length!==this.waves.length;
+      if(changed)this.passages=[];
+      const period=1/(.64*Math.max(1,this.waves.length)),delay=.10*period,tau=.26*period;
+      let brightness=0;
+      this.sectors.forEach((s,index)=>{
+        s.age+=dt;s.pulse*=Math.exp(-dt/(period*.12));
+        let front=0,passed=false;
+        this.waves.forEach((w,i)=>{
+          const d=distance(s.angle,w.angle);
+          const pulse=Math.exp(-Math.pow(d/.085,2))*w.energy;
+          front=Math.max(front,pulse);
+          if(!changed&&oldWaves[i]){
+            const travel=wrap(w.direction*(w.angle-oldWaves[i].angle));
+            const toSector=wrap(w.direction*(s.angle-oldWaves[i].angle));
+            if(travel<TAU*.25&&toSector>0&&toSector<=travel)passed=true;
+          }
+        });
+        if(passed){
+          s.pulse=Math.max(s.pulse,.55+.45*s.height);s.height*=.04;s.age=0;
+          if(index===0&&(this.passages.length===0||this.time-this.passages[this.passages.length-1]>.045)){
+            this.passages.push(this.time);if(this.passages.length>10)this.passages.shift();
+          }
+        }
+        if(s.age>delay){
+          let target=1;
+          if(this.nonideal)target=.76+.18*Math.sin(s.angle*3+this.time*.6);
+          s.height+=(target-s.height)*(1-Math.exp(-dt/tau));
+          if(this.nonideal)s.height-=dt*.08*(.5+.5*Math.sin(s.angle*5-this.time));
+        }
+        s.height=clamp(s.height,0,1);
+        s.pulse=clamp(Math.max(s.pulse,front*(.63+.37*s.height)),0,1);
+        s.state=front>.55?'front':s.age<.24*period?'products':s.height<.67?'recovery':'fresh';
+        brightness+=front*.02;
+      });
+      this.luminosity=clamp(.10+brightness+.13*Math.sin(this.phase*2)**2+(this.nonideal?.11*(.5+.5*Math.sin(this.time*8.7)):0),0,1);
+      if(this.time-this.sampleTime>=.026){
+        this.sampleTime=this.time;
+        this.samples.push({t:this.time,p:[0,18,36,54].map(i=>this.sectors[i].pulse),l:this.luminosity});
+        while(this.samples.length&&this.time-this.samples[0].t>6)this.samples.shift();
+      }
+    }
+    consistency(){
+      if(this.passages.length<4)return null;
+      const intervals=this.passages.slice(1).map((t,i)=>t-this.passages[i]);
+      const mean=intervals.reduce((a,b)=>a+b,0)/intervals.length;
+      const variance=intervals.reduce((a,b)=>a+(b-mean)**2,0)/intervals.length;
+      return clamp(1-Math.sqrt(variance)/Math.max(mean,.0001),0,1);
+    }
+  }
+  class GeometryFactory{
+    constructor(device){this.device=device;this.meshes=[];}
+    build(quads){
+      const positions=[],normals=[],uvs=[],indices=[];
+      quads.forEach(({points,uv})=>{
+        const base=positions.length/3,a=points[0],b=points[1],c=points[2];
+        const ab=[b[0]-a[0],b[1]-a[1],b[2]-a[2]],ac=[c[0]-a[0],c[1]-a[1],c[2]-a[2]];
+        const n=[ab[1]*ac[2]-ab[2]*ac[1],ab[2]*ac[0]-ab[0]*ac[2],ab[0]*ac[1]-ab[1]*ac[0]],length=Math.hypot(...n)||1;
+        points.forEach((p,i)=>{positions.push(...p);normals.push(n[0]/length,n[1]/length,n[2]/length);uvs.push(...(uv?uv[i]:[[0,0],[1,0],[1,1],[0,1]][i]));});
+        indices.push(base,base+1,base+2,base,base+2,base+3);
+      });
+      const mesh=pc.createMesh(this.device,positions,{normals,uvs,indices});this.meshes.push(mesh);return mesh;
+    }
+    tube(inner,outer,z0,z1,start=0,end=TAU,segments=72){
+      const quads=[],p=(r,a,z)=>[r*Math.cos(a),r*Math.sin(a),z],q=points=>quads.push({points});
+      for(let i=0;i<segments;i++){
+        const a=start+(end-start)*i/segments,b=start+(end-start)*(i+1)/segments;
+        q([p(outer,a,z0),p(outer,b,z0),p(outer,b,z1),p(outer,a,z1)]);
+        q([p(inner,a,z1),p(inner,b,z1),p(inner,b,z0),p(inner,a,z0)]);
+        q([p(outer,a,z0),p(inner,a,z0),p(inner,b,z0),p(outer,b,z0)]);
+        q([p(outer,a,z1),p(outer,b,z1),p(inner,b,z1),p(inner,a,z1)]);
+      }
+      if(end-start<TAU-.001){
+        q([p(inner,start,z0),p(outer,start,z0),p(outer,start,z1),p(inner,start,z1)]);
+        q([p(outer,end,z0),p(inner,end,z0),p(inner,end,z1),p(outer,end,z1)]);
+      }
+      return this.build(quads);
+    }
+    shock(){
+      const quads=[];
+      const p=(t,side)=>{const angle=-drawing.shockSweep*t+side*.025;return [1.30*Math.cos(angle),1.30*Math.sin(angle),t*drawing.shockAxial];};
+      for(let i=0;i<32;i++){const a=i/32,b=(i+1)/32;quads.push({points:[p(a,-1),p(a,1),p(b,1),p(b,-1)],uv:[[0,a],[1,a],[1,b],[0,b]]});}
+      return this.build(quads);
+    }
+  }
+  const ribbonVertex=`
+    attribute vec3 aPosition; attribute vec2 aUv0;
+    uniform mat4 matrix_model; uniform mat4 matrix_viewProjection;
+    varying vec2 vUv;
+    void main(void){vUv=aUv0;gl_Position=matrix_viewProjection*matrix_model*vec4(aPosition,1.0);}
+  `;
+  const ribbonFragment=`
+    precision highp float;
+    varying vec2 vUv; uniform vec3 uColor; uniform float uTime; uniform float uAlpha; uniform float uKind;
+    void main(void){
+      float core=exp(-pow((vUv.x-0.5)*5.0,2.0));
+      float textureBand=0.80+0.20*sin(vUv.y*19.0-uTime*5.0);
+      float tail=mix(1.0,1.0-vUv.y*0.82,uKind);
+      vec3 color=mix(uColor,vec3(1.0,0.96,0.96),core*0.60*(1.0-uKind));
+      gl_FragColor=vec4(color*(0.8+core*0.7),uAlpha*(0.22+core*0.65)*textureBand*tail);
+    }
+  `;
+  const particleVertex=`
+    attribute vec3 aPosition; attribute vec4 aColor;
+    uniform mat4 matrix_model; uniform mat4 matrix_viewProjection; uniform float uSize;
+    varying vec4 vColor;
+    void main(void){vColor=aColor;gl_Position=matrix_viewProjection*matrix_model*vec4(aPosition,1.0);gl_PointSize=clamp(uSize/max(gl_Position.w,0.5),2.0,9.0);}
+  `;
+  const particleFragment=`
+    precision highp float; varying vec4 vColor;
+    void main(void){float r=length(gl_PointCoord-vec2(0.5))*2.0;if(r>1.0)discard;gl_FragColor=vec4(vColor.rgb,vColor.a*(1.0-r*r));}
+  `;
+  class EngineScene{
+    constructor(app,model){
+      this.app=app;this.model=model;this.geometry=new GeometryFactory(app.graphicsDevice);this.materials=[];this.parts={};this.explode=0;this.explodeTarget=0;this.mode='glass';
+      this.root=new pc.Entity('RDE procedural assembly');app.root.addChild(this.root);
+      this.flow=new pc.Entity('Chamber-frame reduced-order effects');this.root.addChild(this.flow);
+      this.makeMaterials();this.makeHardware();this.makeEffects();this.setMode('glass');
+    }
+    material(name,color,opacity=1,emissive=0){
+      const m=new pc.StandardMaterial();m.name=name;m.diffuse.set(...color);m.emissive.set(color[0]*emissive,color[1]*emissive,color[2]*emissive);m.metalness=.25;m.useMetalness=true;m.gloss=.45;m.opacity=opacity;
+      if(opacity<1){m.blendType=pc.BLEND_NORMAL;m.depthWrite=false;m.cull=pc.CULLFACE_NONE;}
+      m.update();this.materials.push(m);return m;
+    }
+    shader(name,kind){
+      const m=new pc.ShaderMaterial({uniqueName:name,attributes:{aPosition:pc.SEMANTIC_POSITION,aUv0:pc.SEMANTIC_TEXCOORD0},vertexGLSL:ribbonVertex,fragmentGLSL:ribbonFragment});
+      m.setParameter('uColor',kind?[.30,.72,1]:[1,.20,.26]);m.setParameter('uTime',0);m.setParameter('uAlpha',kind?.38:.75);m.setParameter('uKind',kind);
+      m.blendType=pc.BLEND_ADDITIVE;m.depthWrite=false;m.cull=pc.CULLFACE_NONE;this.materials.push(m);return m;
+    }
+    makeMaterials(){
+      this.metal=this.material('Machined illustrative shell',[.35,.47,.58]);
+      this.lightMetal=this.material('Head-end boundaries',[.49,.62,.71]);
+      this.glass=this.material('Outer X-ray shell',[.30,.57,.72],.14);
+      this.innerGlass=this.material('Inner X-ray body',[.40,.60,.68],.22);
+      this.plenumGlass=this.material('Plenum X-ray',[.28,.46,.56],.31);
+      this.injectionMat=this.material('Abstract injection plane',[.14,.62,.82],.52,.35);
+      this.portMat=this.material('Reviewed-design interface markers',[.52,.68,.77],1,.05);
+      this.heatMat=this.material('Qualitative wall-loss markers',[.62,.45,.31],.20,.35);
+      this.sectorMats={};
+      Object.entries(palette).forEach(([key,color])=>{this.sectorMats[key]=this.material(key+' reduced state',color,key==='front'?.55:.34,.55);});
+      this.waveMats=Array.from({length:3},(_,i)=>this.shader('RdeFront'+i,0));
+      this.shockMats=Array.from({length:3},(_,i)=>this.shader('RdeOblique'+i,1));
+    }
+    part(id){const e=new pc.Entity(id);this.root.addChild(e);this.parts[id]=e;return e;}
+    mesh(name,mesh,material,parent){
+      const entity=new pc.Entity(name);entity.addComponent('render',{meshInstances:[new pc.MeshInstance(mesh,material)],castShadows:false,receiveShadows:false});parent.addChild(entity);return entity;
+    }
+    primitive(name,type,material,parent,position,scale,angles=[0,0,0]){
+      const e=new pc.Entity(name);e.addComponent('render',{type,material,castShadows:false,receiveShadows:false});e.setLocalPosition(...position);e.setLocalScale(...scale);e.setLocalEulerAngles(...angles);parent.addChild(e);return e;
+    }
+    setMaterial(entity,material){entity.render.meshInstances.forEach(instance=>{instance.material=material;});}
+    makeHardware(){
+      const geo=this.geometry;
+      const chamber=this.part('chamber');
+      this.outerFull=this.mesh('Concentric outer wall',geo.tube(1.58,1.67,-2.22,2.25),this.glass,chamber);
+      this.outerHalf=this.mesh('Removed viewing half-shell',geo.tube(1.58,1.67,-2.22,2.25,Math.PI/2,Math.PI*1.5,48),this.metal,chamber);
+      this.outerHalf.enabled=false;
+      this.edgeRings=[];
+      [-2.2,2.18].forEach(z=>this.edgeRings.push(this.mesh('Chamber boundary ring',geo.tube(1.58,1.70,z,z+.08),this.lightMetal,chamber)));
+      const inner=this.part('inner');
+      this.innerBody=this.primitive('Concentric inner body','cylinder',this.innerGlass,inner,[0,0,.02],[2.05,4.42,2.05],[90,0,0]);
+      const plenum=this.part('plenum');
+      this.plenumBody=this.mesh('Head-end feed plenum',geo.tube(.98,1.75,-3.05,-2.44),this.plenumGlass,plenum);
+      const injection=this.part('injection');
+      this.injection=this.mesh('Abstract plane without injector pattern',geo.tube(1.025,1.575,-2.30,-2.25),this.injectionMat,injection);
+      const exhaust=this.part('exhaust');
+      this.exhaustBody=this.mesh('Generic exhaust boundary',geo.tube(1.59,1.70,2.35,2.95),this.glass,exhaust);
+      this.centrebody=this.primitive('Optional centrebody extension','cone',this.innerGlass,exhaust,[0,0,2.91],[2.00,1.22,2.00],[90,0,0]);
+      const initiation=this.part('initiation'),angle=-2.36,radial=new pc.Vec3(Math.cos(angle),Math.sin(angle),0);
+      this.port=this.primitive('Abstract initiation interface','cylinder',this.portMat,initiation,[radial.x*1.82,radial.y*1.82,-1.72],[.28,.52,.28]);
+      this.port.setLocalRotation(new pc.Quat().setFromDirections(pc.Vec3.UP,radial));
+      this.initiationGlow=this.primitive('Startup-stage marker, not a method','sphere',this.sectorMats.front,initiation,[radial.x*2.02,radial.y*2.02,-1.72],[.34,.34,.34]);
+      const instruments=this.part('instruments');this.probeMarkers=[];
+      for(let i=0;i<4;i++){
+        const a=i*TAU/4,material=this.material('Virtual probe '+(i+1),[.23,.62,.83],1,.12);
+        const e=this.primitive('Illustrative instrument interface '+(i+1),'box',material,instruments,[Math.cos(a)*1.77,Math.sin(a)*1.77,-.65],[.19,.19,.23],[0,0,a*DEG]);
+        this.probeMarkers.push({entity:e,material});
+      }
+      this.wallLoss=new pc.Entity('Qualitative wall-loss overlay');chamber.addChild(this.wallLoss);
+      for(let i=0;i<4;i++)this.mesh('Loss marker '+i,geo.tube(1.674,1.682,-1.8+i*.65,-1.25+i*.65,i*1.7,i*1.7+.3,8),this.heatMat,this.wallLoss);
+      this.wallLoss.enabled=false;
+      const grid=this.part('reference-grid'),positions=[],colors=[];
+      for(let i=-8;i<=8;i+=1){positions.push(i,-2.12,-8,i,-2.12,8,-8,-2.12,i,8,-2.12,i);for(let j=0;j<4;j++)colors.push(.22,.31,.39,1);}
+      const mesh=new pc.Mesh(this.app.graphicsDevice);mesh.setPositions(positions);mesh.setColors(colors);mesh.update(pc.PRIMITIVE_LINES);
+      this.gridMaterial=this.material('Undimensioned reference grid',[.19,.27,.34],.40,.20);
+      this.mesh('Orientation grid, no units',mesh,this.gridMaterial,grid);
+    }
+    makeEffects(){
+      const freshMesh=this.geometry.tube(1.045,1.555,0,1,0,TAU/SECTORS*.98,2);
+      this.fresh=[];
+      for(let i=0;i<SECTORS;i++){
+        const e=this.mesh('Sector '+i,freshMesh,this.sectorMats.fresh,this.flow);e.setLocalPosition(0,0,-2.20);e.setLocalEulerAngles(0,0,i*360/SECTORS);this.fresh.push(e);
+      }
+      const waveMesh=this.geometry.tube(1.04,1.565,0,1,-.068,.068,8),shockMesh=this.geometry.shock();
+      this.fronts=[];this.shocks=[];
+      for(let i=0;i<3;i++){
+        this.fronts.push(this.mesh('Travelling front '+i,waveMesh,this.waveMats[i],this.flow));
+        this.shocks.push(this.mesh('Attached oblique shock '+i,shockMesh,this.shockMats[i],this.flow));
+      }
+      this.particleCount=192;this.particlePositions=new Float32Array(this.particleCount*3);this.particleColors=new Float32Array(this.particleCount*4);
+      this.particleMesh=new pc.Mesh(this.app.graphicsDevice);this.particleMesh.setPositions(this.particlePositions);this.particleMesh.setColors(this.particleColors);this.particleMesh.update(pc.PRIMITIVE_POINTS);
+      this.particleMaterial=new pc.ShaderMaterial({uniqueName:'RdeAxialMarkers',attributes:{aPosition:pc.SEMANTIC_POSITION,aColor:pc.SEMANTIC_COLOR},vertexGLSL:particleVertex,fragmentGLSL:particleFragment});
+      this.particleMaterial.setParameter('uSize',48);this.particleMaterial.blendType=pc.BLEND_ADDITIVE;this.particleMaterial.depthWrite=false;this.particleMaterial.cull=pc.CULLFACE_NONE;this.materials.push(this.particleMaterial);
+      this.mesh('Procedural axial transport markers',this.particleMesh,this.particleMaterial,this.flow);
+    }
+    setMode(mode){
+      this.mode=mode;this.outerFull.enabled=mode!=='section';this.outerHalf.enabled=mode==='section';
+      const glass=mode==='glass';this.setMaterial(this.outerFull,glass?this.glass:this.metal);
+      this.setMaterial(this.innerBody,glass?this.innerGlass:this.metal);this.setMaterial(this.plenumBody,glass?this.plenumGlass:this.lightMetal);
+      this.setMaterial(this.exhaustBody,glass?this.glass:this.metal);this.setMaterial(this.centrebody,glass?this.innerGlass:this.metal);
+    }
+    updateHardware(dt){
+      this.explode=smooth(this.explode,this.explodeTarget,dt*9);
+      partInfo.forEach(p=>this.parts[p.id].setLocalPosition(0,0,p.separation*this.explode));
+    }
+    updateFlow(){
+      const model=this.model;
+      model.sectors.forEach((s,i)=>{
+        this.fresh[i].setLocalScale(1,1,drawing.freshMin+s.height*drawing.freshSpan);
+        this.setMaterial(this.fresh[i],this.sectorMats[s.state]);
+      });
+      for(let i=0;i<3;i++){
+        const w=model.waves[i];this.fronts[i].enabled=!!w;this.shocks[i].enabled=!!w;
+        if(!w)continue;
+        const height=drawing.frontMin+drawing.frontSpan*w.energy;
+        this.fronts[i].setLocalPosition(0,0,-2.20);this.fronts[i].setLocalEulerAngles(0,0,w.angle*DEG);this.fronts[i].setLocalScale(1,1,height);
+        this.shocks[i].setLocalPosition(0,0,-2.20+height);this.shocks[i].setLocalEulerAngles(0,0,w.angle*DEG);this.shocks[i].setLocalScale(1,w.direction,1);
+        this.waveMats[i].setParameter('uTime',model.time);this.waveMats[i].setParameter('uAlpha',w.energy*(.64-.18*model.interaction));
+        this.shockMats[i].setParameter('uTime',model.time);this.shockMats[i].setParameter('uAlpha',.26*w.energy);
+      }
+      this.initiationGlow.enabled=model.stage==='initiation';
+      this.initiationGlow.setLocalScale(.34,.34,.34);
+      this.wallLoss.enabled=model.nonideal;
+      this.probeMarkers.forEach((probe,i)=>{const p=model.sectors[i*18].pulse;probe.material.emissive.set(.04+p*.35,.12+p*.45,.17+p*.70);probe.material.update();});
+      this.updateParticles();
+    }
+    updateParticles(){
+      const t=this.model.time,nonideal=this.model.nonideal;
+      for(let i=0;i<this.particleCount;i++){
+        const seed=((i*0.61803398875)%1),angle=seed*TAU;
+        let progress=(t*.48+seed*3.7)%1,r=1.10+((i*0.371)%1)*.38,z,color,alpha=.64;
+        if(i<56){z=-3.26+progress*1.65;color=palette.fresh;}
+        else if(i<160){
+          z=-1.48+progress*5.9;r+=progress*.16;
+          const mix=clamp(progress*1.6,0,1);color=palette.products.map((v,k)=>v+(palette.grey[k]-v)*mix);alpha=.65*(1-progress*.65);
+        }else if(i<180){
+          z=-2.13+progress*5.4;color=palette.fresh;alpha=nonideal?.72:0;
+        }else{
+          progress=(t*.23+seed)%1;z=-1.8+progress*1.6;r=1.50;color=[.95,.49,.32];alpha=nonideal?.28*(.5+.5*Math.sin(t*2+i)):0;
+        }
+        const twist=i>=56&&i<160?.12*Math.sin(progress*3+seed):0;
+        this.particlePositions[i*3]=Math.cos(angle+twist)*r;this.particlePositions[i*3+1]=Math.sin(angle+twist)*r;this.particlePositions[i*3+2]=z;
+        this.particleColors[i*4]=color[0];this.particleColors[i*4+1]=color[1];this.particleColors[i*4+2]=color[2];this.particleColors[i*4+3]=alpha;
+      }
+      this.particleMesh.setPositions(this.particlePositions);this.particleMesh.setColors(this.particleColors);this.particleMesh.update(pc.PRIMITIVE_POINTS);
+    }
+    anchor(part){return new pc.Vec3(part.anchor[0],part.anchor[1],part.anchor[2]+part.separation*this.explode);}
+    destroy(){this.root.destroy();this.materials.forEach(m=>m.destroy());}
+  }
+  class OrbitController{
+    constructor(camera,canvas){
+      this.camera=camera;this.canvas=canvas;this.target=new pc.Vec3(0,0,.15);this.goal=this.target.clone();this.yaw=1.10;this.yawGoal=this.yaw;this.pitch=.30;this.pitchGoal=this.pitch;this.radius=12;this.radiusGoal=12;this.pointers=new Map();this.handlers=[];
+      const on=(type,fn,options)=>{canvas.addEventListener(type,fn,options);this.handlers.push([type,fn,options]);};
+      on('contextmenu',e=>e.preventDefault());
+      on('pointerdown',e=>{canvas.focus({preventScroll:true});canvas.setPointerCapture(e.pointerId);this.pointers.set(e.pointerId,{x:e.clientX,y:e.clientY,button:e.button});});
+      on('pointermove',e=>this.move(e));
+      const release=e=>{this.pointers.delete(e.pointerId);if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId);};
+      on('pointerup',release);on('pointercancel',release);
+      on('wheel',e=>{e.preventDefault();this.radiusGoal=clamp(this.radiusGoal*Math.exp(e.deltaY*.001),4.5,28);},{passive:false});
+      on('keydown',e=>{
+        const d=.09;
+        if(e.key==='Home')this.reset();
+        else if(e.key==='+'||e.key==='=')this.radiusGoal=clamp(this.radiusGoal*.9,4.5,28);
+        else if(e.key==='-')this.radiusGoal=clamp(this.radiusGoal*1.1,4.5,28);
+        else if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)){
+          if(e.shiftKey)this.pan(e.key==='ArrowLeft'?-20:e.key==='ArrowRight'?20:0,e.key==='ArrowUp'?-20:e.key==='ArrowDown'?20:0);
+          else{this.yawGoal+=e.key==='ArrowLeft'?-d:e.key==='ArrowRight'?d:0;this.pitchGoal=clamp(this.pitchGoal+(e.key==='ArrowUp'?d:e.key==='ArrowDown'?-d:0),-1.35,1.35);}
+        }else return;e.preventDefault();
+      });
+      this.update(1);
+    }
+    pan(dx,dy){
+      const scale=this.radiusGoal*.0013,right=this.camera.right,up=this.camera.up;
+      this.goal.x+=(-right.x*dx+up.x*dy)*scale;this.goal.y+=(-right.y*dx+up.y*dy)*scale;this.goal.z+=(-right.z*dx+up.z*dy)*scale;
+      this.goal.x=clamp(this.goal.x,-8,8);this.goal.y=clamp(this.goal.y,-6,6);this.goal.z=clamp(this.goal.z,-9,9);
+    }
+    move(e){
+      const previous=this.pointers.get(e.pointerId);if(!previous)return;
+      const dx=e.clientX-previous.x,dy=e.clientY-previous.y;
+      if(this.pointers.size===2){
+        const other=[...this.pointers.entries()].find(([id])=>id!==e.pointerId)[1];
+        const old=Math.hypot(previous.x-other.x,previous.y-other.y),now=Math.hypot(e.clientX-other.x,e.clientY-other.y);
+        if(old>0&&now>0)this.radiusGoal=clamp(this.radiusGoal*old/now,4.5,28);
+        this.pan(dx*.5,dy*.5);
+      }else if(previous.button===2||e.shiftKey)this.pan(dx,dy);
+      else{this.yawGoal-=dx*.006;this.pitchGoal=clamp(this.pitchGoal+dy*.006,-1.35,1.35);}
+      previous.x=e.clientX;previous.y=e.clientY;
+    }
+    focus(point,radius){this.goal.copy(point);this.radiusGoal=radius;}
+    reset(){this.goal.set(0,0,.15);this.yawGoal=1.10;this.pitchGoal=.30;this.radiusGoal=12;}
+    update(dt){
+      const k=dt*9;this.yaw=smooth(this.yaw,this.yawGoal,k);this.pitch=smooth(this.pitch,this.pitchGoal,k);this.radius=smooth(this.radius,this.radiusGoal,k);
+      this.target.lerp(this.target,this.goal,1-Math.exp(-k));
+      const cp=Math.cos(this.pitch);this.camera.setPosition(this.target.x+this.radius*cp*Math.sin(this.yaw),this.target.y+this.radius*Math.sin(this.pitch),this.target.z+this.radius*cp*Math.cos(this.yaw));this.camera.lookAt(this.target);
+    }
+    destroy(){this.handlers.forEach(([type,fn,options])=>this.canvas.removeEventListener(type,fn,options));this.pointers.clear();}
+  }
+  class Telemetry{
+    constructor(model){this.model=model;this.strip=$('strip');this.traces=$('traces');this.ctx=this.strip.getContext('2d');this.traceCtx=this.traces.getContext('2d');if(!this.ctx||!this.traceCtx)throw new Error('Canvas 2D is unavailable.');this.resize();}
+    resize(){
+      [this.strip,this.traces].forEach(canvas=>{const rect=canvas.getBoundingClientRect();if(rect.width<1||rect.height<1)return;const dpr=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(rect.width*dpr);canvas.height=Math.round(rect.height*dpr);canvas.getContext('2d').setTransform(dpr,0,0,dpr,0,0);});
+      this.theme();
+    }
+    theme(){
+      const s=getComputedStyle(document.documentElement);this.ink=s.getPropertyValue('--ink').trim();this.muted=s.getPropertyValue('--muted').trim();this.line=s.getPropertyValue('--line').trim();this.bg=s.getPropertyValue('--input').trim();
+      this.dark=document.documentElement.dataset.theme!=='light';
+      this.traceColors=this.dark?['#54b9ff','#e0b675','#bd9bff','#62d7b7','#becbd8']:['#096faa','#9a6214','#743ca5','#08734e','#456076'];
+    }
+    stripDraw(){
+      const c=this.ctx,w=this.strip.clientWidth,h=this.strip.clientHeight;if(w<1||h<1)return;
+      c.clearRect(0,0,w,h);const x=13,y=24,width=w-28,height=h-64,bottom=y+height;
+      c.fillStyle=this.bg;c.fillRect(x,y,width,height);c.strokeStyle=this.line;c.strokeRect(x,y,width,height);
+      c.font='9px "Segoe UI",sans-serif';c.fillStyle=this.muted;c.fillText('PRODUCTS / AXIAL OUTFLOW',x+3,y-8);
+      const colors={fresh:'#368dd1',front:'#ff7181',products:'#a98765',recovery:'#46b78b'};
+      this.model.sectors.forEach((s,i)=>{
+        const col=width/SECTORS,fh=(drawing.freshMin+s.height*drawing.freshSpan)/drawing.axialSpan*height;
+        c.fillStyle=colors[s.state];c.globalAlpha=s.state==='front'?.9:.7;c.fillRect(x+i*col,bottom-fh,col+.3,fh);
+      });
+      c.globalAlpha=1;
+      this.model.waves.forEach(wave=>{
+        const frontX=x+wave.angle/TAU*width,frontLength=drawing.frontMin+drawing.frontSpan*wave.energy;
+        const frontY=bottom-frontLength/drawing.axialSpan*height,shockY=bottom-(frontLength+drawing.shockAxial)/drawing.axialSpan*height;
+        c.strokeStyle=this.dark?'#ffbec5':'#a82e43';c.lineWidth=2.1;c.beginPath();c.moveTo(frontX,bottom);c.lineTo(frontX,frontY);c.stroke();
+        c.strokeStyle=this.dark?'#69c4ed':'#176f9c';c.lineWidth=1;c.setLineDash([3,3]);
+        for(const shift of [-width,0,width]){
+          c.save();c.beginPath();c.rect(x,y,width,height);c.clip();c.beginPath();c.moveTo(frontX+shift,frontY);c.lineTo(frontX+shift-wave.direction*width*drawing.shockSweep/TAU,shockY);c.stroke();c.restore();
+        }c.setLineDash([]);
+      });
+      c.strokeStyle=this.muted;c.lineWidth=1;
+      for(let i=0;i<5;i++){
+        const px=x+width*(i+.5)/5,py=y+12+((this.model.time*.30+i*.19)%1)*height*.39;
+        c.globalAlpha=.45;c.beginPath();c.moveTo(px,py+8);c.lineTo(px,py);c.lineTo(px-2,py+3);c.moveTo(px,py);c.lineTo(px+2,py+3);c.stroke();
+      }c.globalAlpha=1;
+      c.setLineDash([3,3]);c.strokeStyle='#62b8e8';c.beginPath();c.moveTo(x,y);c.lineTo(x,bottom);c.moveTo(x+width,y);c.lineTo(x+width,bottom);c.stroke();c.setLineDash([]);
+      c.fillStyle=this.muted;c.fillText('HEAD END / FRESH FILL',x+3,bottom+15);c.fillText('0',x,bottom+30);c.fillText('1 / periodic',Math.max(x,width-52),bottom+30);
+    }
+    tracesDraw(){
+      const c=this.traceCtx,w=this.traces.clientWidth,h=this.traces.clientHeight;if(w<1||h<1)return;c.clearRect(0,0,w,h);
+      const x=28,width=w-35,top=10,row=(h-32)/5,colors=this.traceColors,dash=[[],[5,3],[2,3],[5,2,1,2],[]];
+      for(let channel=0;channel<5;channel++){
+        const base=top+(channel+1)*row-6;c.strokeStyle=this.line;c.lineWidth=1;c.beginPath();c.moveTo(x,base);c.lineTo(w-4,base);c.stroke();
+        c.fillStyle=this.muted;c.font='9px "Segoe UI",sans-serif';c.fillText(channel<4?'P'+(channel+1):'Lum',0,base-row*.38);
+        c.strokeStyle=colors[channel];c.lineWidth=1.5;c.setLineDash(dash[channel]);c.beginPath();let first=true;
+        const end=Math.max(6,this.model.time),start=end-6;
+        this.model.samples.forEach(sample=>{const px=x+(sample.t-start)/6*width,py=base-(channel<4?sample.p[channel]:sample.l)*(row-10);if(first){c.moveTo(px,py);first=false;}else c.lineTo(px,py);});
+        c.stroke();c.setLineDash([]);
+      }
+      c.fillStyle=this.muted;c.font='9px "Segoe UI",sans-serif';c.fillText('Normalized visual time ->',x,h-4);
+    }
+    draw(){this.stripDraw();this.tracesDraw();}
+  }
+  class RdeApplication{
+    constructor(){
+      this.disposed=false;this.model=new WaveModel();this.dark=!matchMedia('(prefers-color-scheme: light)').matches;this.showLabels=true;this.activePart='';this.lastGraph=0;this.lastHud=0;this.handlers=[];
+      try{
+      this.app=new pc.Application($('scene'),{graphicsDeviceOptions:{alpha:false,antialias:true,powerPreference:'high-performance',preserveDrawingBuffer:false}});
+      this.app.graphicsDevice.maxPixelRatio=Math.min(devicePixelRatio||1,1.6);this.app.setCanvasFillMode(pc.FILLMODE_NONE);this.app.setCanvasResolution(pc.RESOLUTION_AUTO);
+      this.app.scene.ambientLight=new pc.Color(.48,.54,.61);
+      this.camera=new pc.Entity('Orbit camera');this.camera.addComponent('camera',{clearColor:new pc.Color(.035,.07,.11),fov:44,nearClip:.08,farClip:90});this.app.root.addChild(this.camera);
+      const key=new pc.Entity('Key light');key.addComponent('light',{type:'directional',color:new pc.Color(.80,.90,1),intensity:1.55,castShadows:false});key.setEulerAngles(45,25,15);this.app.root.addChild(key);
+      const fill=new pc.Entity('Rim light');fill.addComponent('light',{type:'directional',color:new pc.Color(.40,.66,1),intensity:1.3,castShadows:false});fill.setEulerAngles(-25,155,-25);this.app.root.addChild(fill);
+      this.engine=new EngineScene(this.app,this.model);this.orbit=new OrbitController(this.camera,$('scene'));this.telemetry=new Telemetry(this.model);
+      this.makeCallouts();this.bindControls();this.setTheme(this.dark);this.engine.updateFlow();this.updateHud();this.resize();
+      this.observer=new ResizeObserver(()=>this.resize());this.observer.observe($('viewport'));this.observer.observe($('strip'));this.observer.observe($('traces'));
+      this.updateBound=dt=>this.update(dt);this.app.on('update',this.updateBound);this.app.start();
+      $('loading').hidden=true;document.documentElement.dataset.ready='true';
+      }catch(error){this.dispose();throw error;}
+    }
+    on(target,event,handler,options){target.addEventListener(event,handler,options);this.handlers.push([target,event,handler,options]);}
+    makeCallouts(){
+      this.callouts=partInfo.map((part,i)=>{
+        const button=document.createElement('button');button.className='part-label';button.dataset.part=part.id;button.setAttribute('aria-pressed','false');
+        const number=document.createElement('span');number.className='number';number.textContent=String(i+1);button.append(number,document.createTextNode(part.name));button.setAttribute('aria-label','Focus '+part.name+'. Details: TBD, set by reviewed design.');$('labels').appendChild(button);
+        this.on(button,'click',()=>this.focus(part.id));
+        const line=document.createElementNS('http://www.w3.org/2000/svg','line');line.setAttribute('stroke','var(--accent)');line.setAttribute('stroke-opacity','.45');line.setAttribute('stroke-dasharray','3 4');$('callout-lines').appendChild(line);
+        const option=document.createElement('option');option.value=part.id;option.textContent=(i+1)+' / '+part.name;$('focus-part').appendChild(option);
+        return {part,button,line,point:new pc.Vec3()};
+      });
+    }
+    focus(id){
+      const part=partInfo.find(p=>p.id===id);if(!part)return;
+      this.activePart=id;this.orbit.focus(this.engine.anchor(part),part.focus);$('focus-part').value=id;
+      this.callouts.forEach(item=>item.button.setAttribute('aria-pressed',String(item.part.id===id)));
+      $('announcement').textContent='Camera focusing '+part.name+'. TBD: set by reviewed design.';
+    }
+    bindControls(){
+      this.on($('play'),'click',()=>{this.model.playing=!this.model.playing;this.updateHud();});
+      this.on($('step'),'click',()=>{this.model.playing=false;this.model.update(0,true);this.engine.updateFlow();this.telemetry.draw();this.updateHud();});
+      this.on($('replay'),'click',()=>{this.model.replay();this.engine.updateFlow();this.telemetry.draw();this.updateHud();$('announcement').textContent='Startup visual state reset. Playback state is unchanged.';});
+      this.on($('speed'),'input',()=>{this.model.targetSpeed=Number($('speed').value);$('speed-value').value=this.model.targetSpeed.toFixed(2);});
+      document.querySelectorAll('[data-scale]').forEach(button=>this.on(button,'click',()=>{
+        this.model.scale=Number(button.dataset.scale);document.querySelectorAll('[data-scale]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));this.updateHud();
+      }));
+      this.on($('wave-mode'),'change',()=>{this.model.mode=$('wave-mode').value;this.model.replay();this.engine.updateFlow();this.telemetry.draw();this.updateHud();});
+      this.on($('nonideal'),'change',()=>{this.model.nonideal=$('nonideal').checked;this.model.passages=[];this.model.buildWaves();this.engine.updateFlow();this.updateHud();});
+      document.querySelectorAll('[data-view]').forEach(button=>this.on(button,'click',()=>{
+        this.engine.setMode(button.dataset.view);document.querySelectorAll('[data-view]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));this.updateHud();
+      }));
+      this.on($('explode'),'input',()=>{this.engine.explodeTarget=Number($('explode').value);$('explode-value').value=this.engine.explodeTarget.toFixed(2);this.updateHud();});
+      this.on($('centrebody'),'change',()=>{this.engine.centrebody.enabled=$('centrebody').checked;});
+      this.on($('callouts'),'change',()=>{this.showLabels=$('callouts').checked;});
+      this.on($('focus-part'),'change',()=>this.focus($('focus-part').value));
+      this.on($('reset-view'),'click',()=>{this.orbit.reset();this.activePart='';$('focus-part').value='';this.callouts.forEach(c=>c.button.setAttribute('aria-pressed','false'));});
+      this.on($('theme'),'click',()=>this.setTheme(!this.dark));
+      this.on($('toggle-panels'),'click',()=>{
+        const mobile=innerWidth<=850;
+        if(mobile)document.body.classList.toggle('panels-forced');else document.body.classList.toggle('telemetry-hidden');
+        $('toggle-panels').setAttribute('aria-pressed',String(mobile?document.body.classList.contains('panels-forced'):!document.body.classList.contains('telemetry-hidden')));this.telemetry.resize();this.telemetry.draw();
+      });
+      this.on($('about'),'click',()=>{$('about-dialog').showModal();$('close-about').focus();});
+      this.on($('close-about'),'click',()=>$('about-dialog').close());
+      this.reduced=matchMedia('(prefers-reduced-motion: reduce)');
+      this.on(this.reduced,'change',()=>{if(this.reduced.matches){this.model.playing=false;this.updateHud();}});
+      this.on(document,'visibilitychange',()=>{this.lastGraph=0;this.lastHud=0;});
+      this.on($('scene'),'webglcontextlost',event=>{event.preventDefault();this.model.playing=false;showLoadError('The WebGL context was lost. Reload to rebuild the scene.','No model data or hardware settings are saved.');});
+      this.on(window,'pagehide',event=>{if(!event.persisted)this.dispose();});
+    }
+    setTheme(dark){
+      this.dark=dark;document.documentElement.dataset.theme=dark?'dark':'light';$('theme').textContent=dark?'Dark theme':'Light theme';$('theme').setAttribute('aria-pressed',String(dark));
+      this.camera.camera.clearColor=dark?new pc.Color(.035,.07,.11):new pc.Color(.86,.90,.93);
+      [...this.engine.waveMats,...this.engine.shockMats,this.engine.particleMaterial].forEach(material=>{material.blendType=dark?pc.BLEND_ADDITIVE:pc.BLEND_NORMAL;});
+      this.telemetry.theme();this.telemetry.draw();
+    }
+    resize(){
+      if(this.disposed)return;
+      const rect=$('viewport').getBoundingClientRect();this.app.resizeCanvas(Math.max(1,rect.width),Math.max(1,rect.height));this.telemetry.resize();this.telemetry.draw();
+      const mobile=innerWidth<=850;$('toggle-panels').setAttribute('aria-pressed',String(mobile?document.body.classList.contains('panels-forced'):!document.body.classList.contains('telemetry-hidden')));
+    }
+    updateLabels(){
+      const width=$('scene').clientWidth,height=$('scene').clientHeight;
+      const panelWidth=innerWidth>850&&!document.body.classList.contains('telemetry-hidden')?(innerWidth>1150?290:250):16;
+      const maxY=$('controls').getBoundingClientRect().top-38;
+      const arranged=[];
+      this.callouts.forEach((item,i)=>{
+        this.camera.camera.worldToScreen(this.engine.anchor(item.part),item.point);
+        const visible=this.showLabels&&item.point.z>0;
+        item.button.hidden=!visible;item.line.style.display=visible?'':'none';if(!visible)return;
+        const bw=item.button.offsetWidth||150;
+        const x=clamp(item.point.x+(i%2?26:-bw-22),panelWidth,Math.max(panelWidth,width-panelWidth-bw));
+        let y=clamp(item.point.y+(i%2?15:-24),190,Math.max(190,maxY));
+        for(let attempt=0;attempt<10&&arranged.some(b=>Math.abs(b.y-y)<29&&x<b.x+b.w+4&&x+bw>b.x-4);attempt++)y=y+30>maxY?190:y+30;
+        arranged.push({x,y,w:bw});item.button.style.transform=`translate(${x}px,${y}px)`;
+        item.line.setAttribute('x1',item.point.x);item.line.setAttribute('y1',item.point.y);item.line.setAttribute('x2',x+bw/2);item.line.setAttribute('y2',y+13);
+      });
+    }
+    updateHud(){
+      const m=this.model,count=m.waves.length;
+      $('play').textContent=m.playing?'Pause':'Play';$('play').setAttribute('aria-label',m.playing?'Pause animation':'Play animation');
+      $('motion-status').textContent=(m.playing?(m.speed===0?'Visual clock held':'Playing'):'Paused')+' / '+m.scale+'x';
+      $('wave-status').textContent=(m.mode==='counter'?'Counter-rotating':count===1?'One circulating wave':count+' co-rotating waves')+(count!==m.requestedCount()?' / requested '+m.requestedCount():'');
+      $('stage-status').textContent='Abstract startup progression / not an initiation sequence.';
+      document.querySelectorAll('[data-stage]').forEach(node=>node.classList.toggle('active',node.dataset.stage===m.stage));
+      $('model-warning').textContent=m.mode==='counter'?'Counter-rotation and collisions are illustrative, not a stable-solution claim.':m.nonideal?'Mixing / parasitic burning / leakage / wall loss / mode switching: qualitative only.':'No dimensional or operating values are represented.';
+      $('sector-state').textContent={fresh:'Fresh fill',front:'Front passage',products:'Products',recovery:'Recovery / refill'}[m.sectors[0].state];$('fresh-readout').textContent=m.sectors[0].height.toFixed(2);
+      const consistency=m.consistency();$('consistency').textContent=consistency===null?'Collecting passes':consistency.toFixed(2)+' / 1';$('consistency-meter').style.width=(consistency===null?0:consistency*100)+'%';
+      $('trace-caveat').textContent=m.mode==='counter'?'Counter-mode intervals include both directions. Regularity is not proof of a stable physical mode.':'Regularity is a property of this animation, not evidence of detonation.';
+      $('view-note').textContent=this.engine.explodeTarget>.01?'Exploded layout is not an operating arrangement. Flow stays in the chamber reference frame. All design details: TBD: set by reviewed design.':this.engine.mode==='solid'?'Solid walls intentionally occlude internal flow. Choose Glass or Half-shell cut to inspect it. Design details: TBD: set by reviewed design.':'TBD: set by reviewed design. No injector patterns, initiation methods or operational procedures are represented.';
+    }
+    update(dt){
+      if(this.disposed)return;
+      const step=Math.min(dt,.06);this.orbit.update(step);this.engine.updateHardware(step);
+      if(!document.hidden&&this.model.update(step))this.engine.updateFlow();
+      this.updateLabels();
+      const now=performance.now();if(now-this.lastGraph>32){this.telemetry.draw();this.lastGraph=now;}if(now-this.lastHud>120){this.updateHud();this.lastHud=now;}
+    }
+    dispose(){
+      if(this.disposed)return;this.disposed=true;
+      if(this.app&&this.updateBound)this.app.off('update',this.updateBound);
+      if(this.observer)this.observer.disconnect();
+      this.handlers.forEach(([target,event,handler,options])=>target.removeEventListener(event,handler,options));
+      if(this.orbit)this.orbit.destroy();if(this.engine)this.engine.destroy();if(this.app)this.app.destroy();
+      document.documentElement.dataset.disposed='true';
+    }
+  }
+  try{
+    const observatory=new RdeApplication();
+    // Read-only diagnostics support reproducible checks without exposing control internals.
+    window.rdeDiagnostics=()=>({
+      ready:!observatory.disposed,time:observatory.model.time,phase:observatory.model.phase,stage:observatory.model.stage,playing:observatory.model.playing,
+      mode:observatory.model.mode,requested:observatory.model.requestedCount(),waves:observatory.model.waves.map(w=>({...w})),
+      sectors:observatory.model.sectors.map(s=>({...s})),speed:observatory.model.speed,scale:observatory.model.scale,samples:observatory.model.samples.length,
+      consistency:observatory.model.consistency(),view:observatory.engine.mode,exploded:observatory.engine.explode,
+      centrebody:observatory.engine.centrebody.enabled,camera:['x','y','z'].map(axis=>observatory.camera.getPosition()[axis]),
+      frontAngles:observatory.engine.fronts.filter(e=>e.enabled).map(e=>e.getLocalEulerAngles().z),
+      freshFractions:observatory.engine.fresh.map(entity=>entity.getLocalScale().z/drawing.axialSpan),
+      drawCalls:observatory.app.stats.drawCalls.total,particles:observatory.engine.particleCount
+    });
+  }catch(error){
+    console.error('RDE WebGL startup failed:',error);
+    showLoadError('WebGL startup failed. Enable hardware acceleration / WebGL, or try an up-to-date browser.',error.message);
+  }
+})();
+</script>
+</body>
+</html>
