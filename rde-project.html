@@ -1,0 +1,1286 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>RDE demonstrator | Parallel project atlas</title>
+<style>
+  :root{--bg:#f3f4f0;--surface:#fff;--ink:#172b36;--muted:#526672;--line:#d2dcdf;--soft:#edf2f3;--accent:#7048c7;--accent-soft:#eee8fa;--cool:#086c89;--cool-soft:#e4f3f7;--warm:#985117;--warm-soft:#fff0dc;--danger:#b14432;--shadow:0 12px 40px #172b3614;--focus:#005fcc;--authority:#243d49}
+  :root[data-theme="dark"]{--bg:#10191f;--surface:#17242c;--ink:#edf3f5;--muted:#afc1ca;--line:#3b505c;--soft:#20323c;--accent:#c4a7ff;--accent-soft:#302641;--cool:#80d5ec;--cool-soft:#153b49;--warm:#ffc17a;--warm-soft:#3d2c1d;--danger:#ffad9d;--shadow:0 12px 40px #0004;--focus:#8dc5ff;--authority:#304c5c}
+  @media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10191f;--surface:#17242c;--ink:#edf3f5;--muted:#afc1ca;--line:#3b505c;--soft:#20323c;--accent:#c4a7ff;--accent-soft:#302641;--cool:#80d5ec;--cool-soft:#153b49;--warm:#ffc17a;--warm-soft:#3d2c1d;--danger:#ffad9d;--shadow:0 12px 40px #0004;--focus:#8dc5ff;--authority:#304c5c}}
+  *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 "Segoe UI",system-ui,sans-serif}
+  button,select,input{font:inherit}button,select{color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:7px}button{cursor:pointer}button:hover,select:hover{border-color:var(--muted)}button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible,summary:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+  .page{max-width:1600px;margin:auto;padding:26px 28px 22px}.masthead{display:flex;align-items:flex-start;gap:24px;justify-content:space-between}.eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase;font-weight:750;color:var(--cool)}h1{font-size:clamp(25px,3vw,39px);line-height:1.1;letter-spacing:-.04em;margin:8px 0 10px;font-weight:750}h1 span{font-weight:400;color:var(--muted)}.intro{margin:0;max-width:900px;color:var(--muted);font-size:14px}.intro strong{color:var(--ink)}.theme{padding:8px 12px;white-space:nowrap}.brief{display:flex;gap:10px;flex-wrap:wrap;margin:17px 0}.chip{padding:5px 10px;border:1px solid var(--line);border-radius:5px;font-size:12px;background:var(--surface)}.chip.assumed{border-style:dashed;background:var(--warm-soft);color:var(--warm)}.chip strong{font-weight:700}
+  .console{background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);overflow:hidden}.toolbar{padding:13px 16px;display:flex;align-items:center;gap:10px 18px;flex-wrap:wrap;border-bottom:1px solid var(--line)}.toolbar-label{font-size:10px;font-weight:800;letter-spacing:.13em;color:var(--muted);text-transform:uppercase}.toggle{display:inline-flex;align-items:center;gap:7px;cursor:pointer;font-size:12px;font-weight:600}.toggle input{accent-color:var(--accent);width:16px;height:16px;margin:0}.select-wrap{margin-left:auto;display:flex;gap:8px;align-items:center;font-size:12px}.select-wrap select{padding:6px 9px;max-width:255px}.scenario{display:flex;gap:12px;align-items:flex-start;background:var(--accent-soft);padding:10px 16px;font-size:12px;border-bottom:1px solid var(--line)}.scenario .tag{flex:none}.scenario p{margin:0}.tag{font-size:10px;letter-spacing:.08em;font-weight:750;border:1px dashed currentColor;border-radius:3px;padding:1px 5px;display:inline-block;color:var(--accent)}.legend{display:flex;flex-wrap:wrap;gap:7px 20px;padding:11px 16px;color:var(--muted);font-size:11px;border-bottom:1px solid var(--line)}.legend span{display:inline-flex;align-items:center;gap:6px}.swatch{width:14px;height:14px;display:inline-block;border:1.5px solid var(--ink);border-radius:2px}.swatch.fact{background:var(--soft)}.swatch.assumption{border-style:dashed;border-color:var(--warm);transform:rotate(45deg);width:11px;height:11px;margin:0 2px}.swatch.decision{border-style:dashed;border-radius:50%;background:transparent}.swatch.pending{border-radius:50%;border-color:var(--cool)}.swatch.valid{border-radius:50%;border-color:var(--cool);color:var(--cool);font-size:10px;justify-content:center;line-height:11px;text-align:center}.legend .stroke{display:inline-block;width:24px;height:0;border-top:4px solid var(--accent)}.legend .recovery{border-color:var(--warm);border-top-style:dashed;border-top-width:2px}
+  .instructions{font-size:11px;color:var(--muted);margin:0;padding:8px 16px 0}.chart-scroll{overflow:auto;padding:0 9px 8px;scrollbar-color:var(--line) var(--surface)}#atlas{display:block;width:100%;min-width:1160px;height:auto;font-family:"Segoe UI",system-ui,sans-serif}.sr-only{position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden}
+  svg text{fill:var(--ink)}svg .muted{fill:var(--muted)}svg .small{font-size:11px}svg .tiny{font-size:10px}svg .label{font-size:12px;font-weight:650}svg .section{font-size:10px;font-weight:800;letter-spacing:1.4px;fill:var(--muted)}svg .lane-bg{fill:var(--soft);opacity:.65}svg .lane-rule{stroke:var(--line);stroke-width:1}svg .gate-line{stroke:var(--muted);stroke-width:1.2;stroke-dasharray:3 6;opacity:.65}svg .authority-line{stroke:var(--cool);stroke-width:3;stroke-dasharray:none;opacity:1}svg .task-box{fill:var(--surface);stroke:var(--line);stroke-width:1.2;stroke-dasharray:4 2}svg .task:hover .task-box,svg .task:focus .task-box{stroke:var(--focus);stroke-width:2;stroke-dasharray:none}svg [role="button"]{cursor:pointer;outline:none}svg [role="button"]:focus .focus-target{stroke:var(--focus);stroke-width:3}svg .task.block-highlight .task-box{stroke:var(--warm);stroke-width:2}svg .task.decision-highlight .task-box{stroke:var(--cool);stroke-width:2.5;stroke-dasharray:none}svg .task-title{font-size:12px;font-weight:650}svg .task-caption{font-size:10px;fill:var(--muted)}svg .task-chevron{fill:var(--muted);font-size:13px}svg .decision-box{fill:transparent;stroke:var(--muted);stroke-width:1.3;stroke-dasharray:5 4}svg .decision-selected .decision-box{stroke:var(--cool);stroke-width:2.5}svg .link{fill:none;stroke:var(--cool);stroke-width:1.6;stroke-dasharray:4 4}svg .critical{fill:none;stroke:var(--accent);stroke-width:5;stroke-linecap:round;stroke-linejoin:round}svg .recovery-path{fill:none;stroke:var(--warm);stroke-width:1.7;stroke-dasharray:6 4}svg .recovery-box{fill:var(--warm-soft);stroke:var(--warm);stroke-width:1;stroke-dasharray:5 3}svg .evidence{fill:var(--surface);stroke:var(--cool);stroke-width:1.5}svg .cool-text{fill:var(--cool)}svg .warm-text{fill:var(--warm)}svg .gate-box{fill:var(--surface);stroke:var(--muted);stroke-width:1.2}svg .assumption-mark{fill:var(--warm);font-size:9px;font-weight:800}
+  .bottom{display:grid;grid-template-columns:1.15fr 1fr 1fr;gap:20px;padding:16px;border-top:1px solid var(--line);font-size:12px}.bottom h2{font-size:11px;text-transform:uppercase;letter-spacing:.09em;margin:0 0 5px}.bottom p{margin:0;color:var(--muted)}.bottom strong{color:var(--ink)}footer{padding-top:12px;color:var(--muted);font-size:11px;display:flex;justify-content:space-between;gap:20px}details{margin-top:14px;border:1px solid var(--line);border-radius:8px;background:var(--surface);padding:10px 14px}summary{cursor:pointer;font-size:12px;font-weight:650}.register-wrap{overflow:auto;max-height:420px}.register{border-collapse:collapse;width:100%;font-size:12px;margin-top:10px}.register th,.register td{text-align:left;vertical-align:top;border-bottom:1px solid var(--line);padding:8px}.register th{color:var(--muted)}
+  dialog{background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:14px;width:min(570px,calc(100vw - 32px));max-height:85vh;padding:0;box-shadow:0 24px 90px #0005}dialog::backdrop{background:#07151d99}.dialog-head{padding:22px 24px 15px;border-bottom:1px solid var(--line)}.dialog-kicker{font-size:11px;font-weight:750;text-transform:uppercase;letter-spacing:.1em;color:var(--cool);margin-bottom:7px}dialog h2{font-size:23px;line-height:1.2;margin:8px 40px 0 0}.close{position:absolute;right:16px;top:16px;width:32px;height:32px;font-size:20px}.dialog-body{padding:16px 24px 24px}dl{margin:0}dt{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:750;margin-top:14px}dt:first-child{margin-top:0}dd{margin:4px 0 0;font-size:14px}.notice{background:var(--warm-soft);color:var(--warm);padding:10px 12px;border-left:3px solid var(--warm);font-size:12px;margin:18px 0 0}.tooltip{display:none;position:fixed;z-index:20;pointer-events:none;background:var(--ink);color:var(--bg);border-radius:6px;padding:9px 12px;max-width:310px;font-size:12px;box-shadow:var(--shadow)}
+  @media(max-width:800px){.page{padding:16px 10px}.masthead{gap:10px}.theme{font-size:11px}.select-wrap{margin-left:0}.bottom{grid-template-columns:1fr;gap:12px}footer{display:block}h1 span{display:block}.brief{gap:6px}}
+  @media(prefers-reduced-motion:no-preference){button,select{transition:border-color .15s}svg .task-box{transition:stroke .15s}}
+  .tabs{display:flex;gap:5px;overflow-x:auto;padding:4px 0 10px;margin-top:14px}.tabs button{padding:10px 14px;white-space:nowrap;font-size:12px;font-weight:700}.tabs button[aria-selected="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);box-shadow:inset 0 -3px var(--accent)}[hidden]{display:none!important}.selection-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;border:1px solid var(--line);border-radius:8px;background:var(--surface);padding:9px 13px;margin:0 0 13px;font-size:12px}.selection-bar p{margin:0;flex:1}.selection-bar button{padding:4px 8px}.selection-bar strong{color:var(--accent)}.selection-related{font-size:11px;color:var(--muted)}
+  .tab-panel:focus{outline:none}.panel-head{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;padding:20px 22px 15px;border-bottom:1px solid var(--line)}.panel-head h2{font-size:24px;letter-spacing:-.025em;margin:3px 0 5px}.panel-head p{margin:0;color:var(--muted);max-width:850px;font-size:13px}.panel-body{padding:18px 20px}.engine-layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:16px}.drawing-wrap{min-width:0;overflow:auto;border:1px solid var(--line);border-radius:9px;background:var(--surface)}.engine-svg{display:block;width:100%;min-width:650px;height:auto}.engine-svg text{font-size:12px}.engine-svg .drawing-label{font-size:14px;font-weight:650}.engine-svg .drawing-small{font-size:11px;fill:var(--muted)}.engine-svg .part-shape{stroke:var(--muted);stroke-width:1.4;fill:var(--soft)}.engine-svg .part-outline{fill:none;stroke:var(--muted);stroke-width:1.5}.engine-svg .shell{fill:var(--cool-soft);fill-opacity:.35;stroke:var(--muted);stroke-width:1.5}.engine-svg .callout-badge{fill:var(--surface);stroke:var(--muted);stroke-width:1.3}.engine-svg .callout-leader{fill:none;stroke:var(--muted);stroke-width:1;stroke-dasharray:3 3}.engine-svg .selected-part .part-shape,.engine-svg .selected-part .part-outline,.engine-svg .selected-part .shell,.engine-svg .selected-part .callout-badge{stroke:var(--accent);stroke-width:3}.engine-svg .stressed-part .part-shape,.engine-svg .stressed-part .part-outline,.engine-svg .stressed-part .shell,.engine-svg .stressed-part .callout-badge{stroke:var(--warm);stroke-dasharray:5 3;stroke-width:3}.engine-svg [role="button"]:focus .focus-target{stroke:var(--focus);stroke-width:3}.engine-svg .revision-stamp{fill:var(--warm);font-size:10px;font-weight:750}.part-list{display:flex;flex-direction:column;gap:6px}.part-button{text-align:left;padding:8px 10px;font-size:12px;display:grid;grid-template-columns:24px 1fr;gap:7px;align-items:start}.part-number{border:1px solid var(--line);border-radius:50%;width:22px;height:22px;text-align:center;font-size:11px;line-height:20px}.part-button small{display:block;color:var(--muted);font-size:10px;margin-top:2px}.selected-part.part-button{border-color:var(--accent);background:var(--accent-soft)}.stressed-part.part-button{border-style:dashed;border-color:var(--warm)}.view-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:12px}.view-controls button,.view-controls select{padding:6px 10px}.view-controls button[aria-pressed="true"]{border-color:var(--cool);background:var(--cool-soft);color:var(--cool)}.schematic-note{font-size:12px;color:var(--muted);margin:10px 0 0}.small-heading{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin:0 0 10px}
+  svg .task.cross-linked .task-box,svg .cross-linked .gate-box{stroke:var(--accent);stroke-width:2.8;stroke-dasharray:none}svg .cross-linked .recovery-box{stroke:var(--accent);stroke-width:2.8}svg .gate-focus-halo{fill:none;stroke:var(--accent);stroke-width:4;opacity:0;pointer-events:none}svg .cross-linked .gate-focus-halo{opacity:1}.link-key{color:var(--accent);font-weight:700}.analysis-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(350px,1fr);gap:20px}.part-card{border:1px solid var(--line);border-radius:9px;background:var(--surface);padding:18px}.part-card h3{margin:5px 0 12px;font-size:22px}.part-card dl{display:grid;grid-template-columns:135px 1fr;gap:10px 14px}.part-card dt{margin:0;font-size:10px}.part-card dd{margin:0;font-size:12px}.part-card .notice{margin-bottom:0}.part-dialog{width:min(750px,calc(100vw - 32px))}.part-dialog .part-card{border:0;padding:22px}.part-dialog .part-card h3{padding-right:35px}.coupling-svg{display:block;width:100%;min-width:430px}.coupling-node rect{fill:var(--surface);stroke:var(--muted);stroke-dasharray:4 3}.coupling-node.selected-part rect{stroke:var(--accent);stroke-width:3}.coupling-node text{font-size:11px}.coupling-node:focus rect{stroke:var(--focus);stroke-width:3}
+  .operation-controls{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:12px 20px;border-bottom:1px solid var(--line);font-size:12px}.operation-controls button,.operation-controls select{padding:7px 12px}.operation-controls input[type="range"]{width:150px;accent-color:var(--cool)}.operation-controls label{display:flex;gap:7px;align-items:center}.operation-state{margin-left:auto;color:var(--muted);font-size:11px}.operation-svg{display:block;width:100%;min-width:970px}.operation-svg .op-label{font-size:14px;font-weight:650}.operation-svg .op-small{font-size:12px;fill:var(--muted)}.operation-svg .nonideal rect{fill:var(--warm-soft);stroke:var(--warm);stroke-dasharray:4 3}.operation-svg .nonideal text{fill:var(--warm);font-size:11px}.operation-legend{display:flex;gap:18px;flex-wrap:wrap;font-size:12px;padding:0 20px 13px}.legend-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;border:1px solid var(--cool);background:var(--cool-soft)}.legend-dot.wave{border-radius:0;background:var(--warm);border-color:var(--warm)}.legend-dot.product{border-radius:0;border-style:dashed;background:var(--soft);border-color:var(--muted)}.evidence-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.evidence-panel{border:1px solid var(--line);border-radius:9px;padding:15px;background:var(--surface);font-size:12px}.evidence-panel h3{margin:0 0 8px;font-size:14px}.evidence-panel p{margin:6px 0;color:var(--muted)}.evidence-panel strong{color:var(--ink)}.evidence-panel.negative{border-style:dashed}.stage-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}.stage{padding:10px;border-top:3px solid var(--line);font-size:12px}.stage.active{border-color:var(--cool);background:var(--cool-soft)}.stage b{display:block}.stage p{margin:3px 0 0;color:var(--muted);font-size:11px}
+  .risk-layout{display:grid;grid-template-columns:310px minmax(0,1fr);gap:18px}.risk-buttons{display:flex;flex-direction:column;gap:7px}.risk-button{text-align:left;padding:10px;font-size:12px;border-style:dashed}.risk-button small{display:block;color:var(--muted);margin-top:3px}.risk-button[aria-pressed="true"]{border-color:var(--warm);background:var(--warm-soft)}.risk-detail{border-left:3px solid var(--warm);padding:12px;background:var(--warm-soft);font-size:12px;margin-top:12px}.risk-detail h3{margin:0 0 8px;font-size:16px}.risk-detail p{margin:7px 0}.risk-detail button{padding:7px 10px;margin-top:8px}.revision-history{font-size:11px;max-height:160px;overflow:auto;border-top:1px solid var(--line);padding-top:8px;margin-top:10px}.revision-history p{margin:6px 0}.gate-mini{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}.gate-mini button{padding:8px;flex:1;min-width:70px;font-size:11px}.gate-mini button b{display:block}.gate-mini button.cross-linked{border-color:var(--accent);box-shadow:inset 0 -3px var(--accent)}.gate-mini button.return-gate{border:2px dashed var(--warm);background:var(--warm-soft)}.gate-mini button[data-gate="G4"]{border-width:2;border-color:var(--cool)}.risk-fineprint{font-size:11px;color:var(--muted);margin-top:10px}.trail-grid{display:grid;grid-template-columns:280px minmax(0,1fr);gap:18px}.trail-buttons{display:flex;flex-direction:column;gap:8px}.trail-button{text-align:left;padding:10px 12px;font-size:12px;border-style:dashed;border-color:var(--cool)}.trail-button small{display:block;color:var(--muted);margin-top:3px}.trail-button[aria-pressed="true"]{background:var(--cool-soft);border-style:solid;border-width:2}.trail-status{display:inline-block;width:10px;height:10px;border:1.5px solid var(--cool);border-radius:50%;margin-right:7px}.trail-note{padding:12px;border:1px dashed var(--cool);border-radius:8px;font-size:12px;margin-top:12px}.trail-note h3{margin:0 0 7px;font-size:15px}.trail-note p{margin:5px 0}.footprint-map{width:100%;min-width:720px;display:block}.footer-warning{font-size:11px;color:var(--muted);border-top:1px solid var(--line);padding-top:12px}
+  @media(max-width:1050px){.engine-layout,.risk-layout,.trail-grid{grid-template-columns:1fr}.part-list{display:grid;grid-template-columns:repeat(2,1fr)}.risk-buttons,.trail-buttons{display:grid;grid-template-columns:repeat(2,1fr)}.analysis-layout{grid-template-columns:1fr}.operation-state{margin-left:0}}
+  @media(max-width:650px){.panel-head{padding:14px;flex-direction:column}.panel-body{padding:12px}.evidence-grid,.stage-row{grid-template-columns:1fr 1fr}.part-card dl{grid-template-columns:1fr;gap:5px}.part-card dt{margin-top:9px}.risk-buttons,.trail-buttons{grid-template-columns:1fr}.selection-bar{font-size:11px}}
+  @media print{body{background:white}.page{padding:0;max-width:none}.toolbar,.instructions,.theme,details,footer{display:none}.console{box-shadow:none}.chart-scroll{overflow:visible;padding:0}#atlas{min-width:0;width:100%}.masthead h1{font-size:25px}.bottom{font-size:10px}.brief{margin:8px 0}@page{size:A3 landscape;margin:9mm}}
+</style>
+</head>
+<body>
+<main class="page">
+  <header class="masthead">
+    <div>
+      <div class="eyebrow">University research / execution architecture / planning baseline</div>
+      <h1>Rotating detonation engine <span>Project atlas</span></h1>
+      <p class="intro"><strong>One demonstrator. Six parallel workstreams. Evidence before release.</strong><br>Stationary, instrumented research hardware; establish repeatable rotating-detonation operation.</p>
+    </div>
+    <button id="theme" class="theme" aria-label="Colour theme: system. Activate to switch to light.">Theme: system</button>
+  </header>
+  <div class="brief">
+    <span class="chip"><strong>GIVEN</strong> Physical research demonstrator</span>
+    <span class="chip assumed"><strong>~28 weeks: optimistic, challenged</strong> / not a forecast</span>
+    <span class="chip">Out of scope: flight / long duration / efficiency optimisation</span>
+  </div>
+  <nav class="tabs" role="tablist" aria-label="Project and engine views">
+    <button id="tab-project" role="tab" aria-selected="true" aria-controls="panel-project" tabindex="0">01 Project timeline</button>
+    <button id="tab-engine" role="tab" aria-selected="false" aria-controls="panel-engine" tabindex="-1">02 Engine dissection</button>
+    <button id="tab-operation" role="tab" aria-selected="false" aria-controls="panel-operation" tabindex="-1">03 How it works</button>
+    <button id="tab-analysis" role="tab" aria-selected="false" aria-controls="panel-analysis" tabindex="-1">04 Part analysis</button>
+    <button id="tab-failure" role="tab" aria-selected="false" aria-controls="panel-failure" tabindex="-1">05 Failure &amp; recovery</button>
+    <button id="tab-evidence" role="tab" aria-selected="false" aria-controls="panel-evidence" tabindex="-1">06 CFD footprints</button>
+  </nav>
+  <div class="legend" aria-label="Shared visual legend">
+    <span><i class="swatch fact" aria-hidden="true"></i>FACT / given scope &amp; rules</span>
+    <span><i class="swatch assumption" aria-hidden="true"></i>ASSUMPTION / draft content &amp; timing</span>
+    <span><i class="swatch decision" aria-hidden="true"></i>DECISION / hollow + dashed</span>
+    <span><i class="swatch pending" aria-hidden="true"></i>Not yet validated</span>
+    <span><i class="swatch valid" aria-hidden="true">&#10003;</i>Validated (none recorded)</span>
+    <span><i class="stroke" aria-hidden="true"></i>Controlling chain / linked selection</span>
+    <span><i class="stroke recovery" aria-hidden="true"></i>Failure &amp; recovery</span>
+  </div>
+  <div class="selection-bar">
+    <p id="selection-summary" aria-live="polite"><strong>Cross-links:</strong> select a part, task, gate, recovery loop or evidence stage.</p>
+    <button id="inspect-selection">Inspect linked part</button>
+    <button id="clear-selection">Clear selection</button>
+  </div>
+  <section id="panel-project" class="tab-panel" role="tabpanel" aria-labelledby="tab-project" tabindex="0">
+  <section class="console" aria-label="Interactive project visualisation">
+    <div class="toolbar" aria-label="Visualisation layers">
+      <span class="toolbar-label">Layers</span>
+      <label class="toggle"><input id="decisions" type="checkbox" checked>Open decisions</label>
+      <label class="toggle"><input id="footprints" type="checkbox" checked>CFD footprints</label>
+      <label class="toggle"><input id="recoveries" type="checkbox" checked>Failure &amp; recovery</label>
+      <label class="toggle"><input id="critical" type="checkbox" checked>Critical-path shifts</label>
+      <label class="select-wrap" for="scenario">What if?
+        <select id="scenario">
+          <option value="baseline">Illustrative baseline</option>
+          <option value="facility">Facility approval / development</option>
+          <option value="parts">Long-lead parts delayed</option>
+          <option value="validation">CFD validation fails</option>
+          <option value="rework">Fabrication / inspection rework</option>
+        </select>
+      </label>
+    </div>
+    <div class="scenario" id="scenario-panel" aria-live="polite"><span class="tag">ASSUMPTION</span><p id="scenario-text"></p></div>
+    <p class="instructions" id="chart-help">Click a task, gate or recovery card for details. Select a hollow decision to trace what it unlocks. Keyboard: Tab to items; Enter/Space opens; arrow keys move between tasks; Escape closes details. Scroll horizontally on smaller screens.</p>
+    <div class="chart-scroll" tabindex="0" role="region" aria-label="Scrollable project map" aria-describedby="chart-help">
+      <svg id="atlas" xmlns="http://www.w3.org/2000/svg" role="group" aria-labelledby="map-title map-desc"></svg>
+    </div>
+    <div class="bottom">
+      <div><h2>01 / Parallel, not premature</h2><p>CAD, controls, data tools and facility work start early. Use <strong>shared interfaces + provisional load ranges</strong>; release reviewed packages in stages.</p></div>
+      <div><h2>02 / Release is conditional</h2><p><strong>CFD does not certify hardware safety.</strong> Pressure-containing and combustion-critical fabrication stays behind G2 reviews.</p></div>
+      <div><h2>03 / Recovery is controlled</h2><p>A failure changes the baseline, not the evidence standard. Re-enter a <strong>named gate</strong>; re-review and re-authorise where affected.</p></div>
+    </div>
+  </section>
+  <details>
+    <summary>Accessible task register / all draft owners, inputs, deliverables, dependencies and acceptance criteria</summary>
+    <p class="intro" style="margin-top:8px">All task-level execution criteria and detailed timing are ASSUMPTIONS for institutional review. No task or validation is represented as completed.</p>
+    <div class="register-wrap"><table class="register"><thead><tr><th scope="col">Task / owner / window</th><th scope="col">Inputs</th><th scope="col">Deliverable</th><th scope="col">Dependency</th><th scope="col">Acceptance (draft)</th></tr></thead><tbody id="task-register"></tbody></table></div>
+  </details>
+  </section>
+  <section id="panel-engine" class="tab-panel console" role="tabpanel" aria-labelledby="tab-engine" tabindex="0" hidden>
+    <header class="panel-head"><div><div class="eyebrow">Hardware / conceptual topology</div><h2>Inside the demonstrator</h2><p>Head end to exhaust. Generic component relationships, not a selected engine configuration. Numbered parts link to owners, gates, evidence and recovery loops.</p></div><div class="view-controls" aria-label="Engine view"><button id="view-cutaway" aria-pressed="true">Cutaway</button><button id="view-exploded" aria-pressed="false">Exploded</button></div></header>
+    <div class="panel-body"><div class="engine-layout"><div><div class="drawing-wrap"><svg id="engine-dissection" class="engine-svg" viewBox="0 0 960 470" role="group" aria-label="Selectable conceptual engine components"></svg></div><p class="schematic-note">Schematic / not to scale. Transparent walls reveal relationships; spacing is illustrative. <strong>TBD: set by reviewed design.</strong> No flow passages, injector geometry or fabrication detail are represented.</p></div><div><h3 class="small-heading">Part / owning workstream / release gate</h3><div id="engine-parts" class="part-list"></div></div></div></div>
+  </section>
+  <section id="panel-operation" class="tab-panel console" role="tabpanel" aria-labelledby="tab-operation" tabindex="0" hidden>
+    <header class="panel-head"><div><div class="eyebrow">Animated explanation / no CFD results</div><h2>The wave rotates. The hardware does not.</h2><p>A synchronized annulus and an unrolled periodic strip show one illustrative wave, replenishment near the head end and downstream product flow. Display speed is arbitrary, not physical time.</p></div><span class="tag">ASSUMPTION / illustrative single-wave mode</span></header>
+    <div class="operation-controls">
+      <button id="op-play" aria-label="Pause animation">Pause</button><button id="op-step">Step frame</button>
+      <label for="op-speed">Display speed <select id="op-speed"><option value="0.5">Slower</option><option value="1" selected>Normal</option><option value="2">Faster</option></select></label>
+      <label for="op-phase">Scrub cycle <input id="op-phase" type="range" min="0" max="100" value="12" aria-label="Illustrative cycle position; not physical time"></label>
+      <label class="toggle"><input type="checkbox" id="op-real">Ideal vs real: show non-idealities</label>
+      <span class="operation-state" id="op-state" role="status"></span>
+    </div>
+    <div class="drawing-wrap" style="border:0;border-radius:0"><svg id="operation-svg" class="operation-svg" viewBox="0 0 1260 460" role="img" aria-labelledby="operation-title operation-description"></svg></div>
+    <div class="operation-legend"><span><i class="legend-dot"></i>Fresh-mixture region / replenishment</span><span><i class="legend-dot wave"></i>Travelling detonation front</span><span><i class="legend-dot product"></i>Products / downstream flow</span><span>Shapes distinguish regions; colours are not computed fields.</span></div>
+    <div class="panel-body">
+      <div class="stage-row" id="operation-stages">
+        <div class="stage"><b>1 / Wave passage</b><p>A shock-coupled reaction consumes fresh mixture locally.</p></div>
+        <div class="stage"><b>2 / Expansion</b><p>Products expand downstream; local injection can be suppressed.</p></div>
+        <div class="stage"><b>3 / Replenishment</b><p>Fresh mixture re-enters as local conditions permit.</p></div>
+        <div class="stage"><b>4 / Wave returns</b><p>The next passage needs a suitable fresh layer.</p></div>
+      </div>
+      <div class="evidence-grid">
+        <div class="evidence-panel"><h3>What combines into credible evidence</h3><p><strong>Synchronized, high-bandwidth circumferential pressure measurements</strong> support propagation direction, wave count and speed.</p><p><strong>Time-resolved optical diagnostics</strong>, where feasible, can help distinguish the shock and reaction structure. Combine these with mixture-specific detonation references, uncertainty and repeatability.</p><p><strong>Supply/flow records, thermal measurements and as-built configuration</strong> establish context; calibrated thrust measurements support performance claims, not detonation identification by themselves.</p></div>
+        <div class="evidence-panel negative"><h3>What does not establish it</h3><p>Glow, noise, a single oscillating pressure signal or a pleasing animation are <strong>not sufficient proof</strong> of rotating detonation.</p><p>Speed near an ideal reference is supporting evidence, not a stand-alone certificate. CFD agreement alone cannot establish an experimental wave mode.</p><p><strong>No data exists in this illustration.</strong> Actual evidence and acceptance must be reviewed; a negative demonstration result remains valid.</p><button id="op-diagnostics">Inspect diagnostics and evidence links</button></div>
+      </div>
+    </div>
+  </section>
+  <section id="panel-analysis" class="tab-panel console" role="tabpanel" aria-labelledby="tab-analysis" tabindex="0" hidden>
+    <header class="panel-head"><div><div class="eyebrow">Part analysis / shared selection</div><h2>Couplings, uncertainty and release conditions</h2><p>All component assessments and acceptance wording are draft assumptions. The map is a relative discussion aid, not a quantified risk score.</p></div><span class="tag">ASSUMPTION / no validated component evidence</span></header>
+    <div class="panel-body analysis-layout"><div><div class="drawing-wrap"><svg id="coupling-map" class="coupling-svg" viewBox="0 0 620 440" role="group" aria-label="Relative coupling complexity versus current uncertainty map"></svg></div><p class="schematic-note">Dashed placements express provisional judgement. Lower relative uncertainty does not mean low risk or design readiness. Click a marker for its full card.</p><div id="analysis-parts" class="part-list" style="margin-top:12px"></div></div><article id="analysis-card" class="part-card" aria-live="polite"></article></div>
+  </section>
+  <section id="panel-failure" class="tab-panel console" role="tabpanel" aria-labelledby="tab-failure" tabindex="0" hidden>
+    <header class="panel-head"><div><div class="eyebrow">Stress scenarios / controlled re-entry</div><h2>Break down. Review. Come back.</h2><p>Scenario controls link risks to hardware and the project timeline. Revision stamps are a reversible demonstration of change control, not actual fabrication history or approval.</p></div><label class="toggle"><input id="stress-enabled" type="checkbox">Apply selected stress scenario</label></header>
+    <div class="panel-body risk-layout"><div><div id="risk-buttons" class="risk-buttons"></div><div id="risk-detail" class="risk-detail"></div><div class="view-controls" style="margin-top:10px"><button id="reset-revisions">Reset demo revisions</button></div><div id="revision-history" class="revision-history" aria-live="polite"></div></div><div><div class="drawing-wrap"><svg id="risk-engine" class="engine-svg" viewBox="0 0 960 470" role="group" aria-label="Hardware affected by the selected project stress"></svg></div><div id="risk-gates" class="gate-mini" aria-label="Recovery re-entry gates"></div><p id="risk-route" class="risk-fineprint"></p><button id="risk-timeline" style="padding:7px 12px">See affected timeline tasks</button></div></div>
+  </section>
+  <section id="panel-evidence" class="tab-panel console" role="tabpanel" aria-labelledby="tab-evidence" tabindex="0" hidden>
+    <header class="panel-head"><div><div class="eyebrow">CFD footprints / evidence lineage</div><h2>Models inform hardware. Experiments challenge models.</h2><p>Each stage supplies bounded evidence, not safety certification. Hollow markers mean not yet validated; no stage has been completed in this project record.</p></div><span class="tag">NO CFD RESULTS AVAILABLE</span></header>
+    <div class="panel-body trail-grid"><div><div id="trail-buttons" class="trail-buttons"></div><div id="trail-note" class="trail-note"></div></div><div><div class="drawing-wrap"><svg id="footprint-map" class="footprint-map" viewBox="0 0 980 380" role="group" aria-label="CFD evidence dependencies on workstreams and hardware"></svg></div><div class="drawing-wrap" style="margin-top:12px"><svg id="evidence-engine" class="engine-svg" viewBox="0 0 960 470" role="group" aria-label="Hardware informed by the selected CFD evidence stage"></svg></div></div></div>
+  </section>
+  <footer class="footer-warning">Conceptual illustration. Not a design. CFD does not certify hardware safety. Hardware design and hazardous operation require qualified institutional review.</footer>
+</main>
+<dialog id="detail" aria-labelledby="detail-title">
+  <div class="dialog-head"><button class="close" id="close-detail" aria-label="Close details">&times;</button><div class="dialog-kicker" id="detail-kicker"></div><span class="tag" id="detail-status"></span><h2 id="detail-title"></h2></div>
+  <div class="dialog-body"><dl id="detail-fields"></dl><p class="notice" id="detail-note"></p></div>
+</dialog>
+<dialog id="part-dialog" class="part-dialog" aria-labelledby="part-dialog-title"><button class="close" id="close-part" aria-label="Close part analysis">&times;</button><article id="part-dialog-card" class="part-card"></article></dialog>
+<div class="tooltip" id="tooltip" role="tooltip"></div>
+<div class="sr-only" id="announcement" aria-live="polite"></div>
+<noscript><p>This file needs JavaScript to draw the interactive map. Enable JavaScript in a local browser; no network access is required.</p></noscript>
+<script>
+'use strict';
+const NS='http://www.w3.org/2000/svg';
+const $=id=>document.getElementById(id);
+const windows=['Wk 1-2','Wk 3-6','Wk 7-10','Wk 11-14','Wk 15-18','Wk 19-22','Wk 23-28'];
+const phaseNames=['Define','Develop in parallel','Converge & review','Make & prepare','Commission','Conditional test','Learn & decide'];
+const edges=[260,415,570,725,880,1035,1190,1385];
+const lanes=[
+  {name:'Combustion & CFD',sub:'Evidence / uncertainty',owner:'Combustion & CFD lead',short:'CFD',rows:[
+    ['Reference study','0D / CJ-ZND foundation','Literature and unresolved configuration/propellant choices.','Reference set and thermochemistry workflow.','Starts immediately; mixture-specific conclusions await decisions.','Reference sources and calculation assumptions are traceable.'],
+    ['Validate benchmarks','1D benchmark / 2D model','Reference calculations, chemistry and benchmark data.','Verification/validation record and baseline periodic model.','Reference workflow; chosen chemistry before mixture-specific validation.','Published benchmark comparisons and grid/time sensitivity are documented.'],
+    ['Map sensitivities','Provisional load envelopes','Validated baseline and interface assumptions.','Load ranges, injector sensitivities and wave-mode expectations.','Relevant validation evidence; unresolved uncertainty can hold affected G2 releases.','Mechanical and diagnostics leads acknowledge limits and usable bounds.'],
+    ['Refine predictions','Selective 3D only if justified','Reviewed geometry and justified modelling gaps.','Commissioning predictions with uncertainty; 3D study only if needed.','Configuration controlled at G2; further modelling remains parallel to fabrication.','Predictions identify observables and limitations without claiming safety certification.'],
+    ['Compare cold flow','Resolve discrepancies','Non-reacting measurements and corresponding model.','Comparison report and tracked discrepancies.','Approved non-reacting commissioning and calibrated measurements.','Material disagreement is resolved before G3 acceptance and G4 consideration.'],
+    ['Test evidence','Only after G4','Authorised experimental data and as-built boundaries.','Model/data comparison and assessment of wave evidence.','Independent G4 approval before combustion testing.','Interpretation separates measurement evidence from numerical expectation.'],
+    ['Assess repeatability','Experiment / model return','Repeated authorised datasets and uncertainty estimates.','Validated comparison within stated limits; next-version inputs.','Reviewed test evidence and configuration history.','G5 receives a traceable conclusion, including a negative result if appropriate.']
+  ]},
+  {name:'Mechanical & thermal',sub:'Hardware / integrity',owner:'Mechanical & thermal lead',short:'Mechanical',rows:[
+    ['Requirements & CAD','Parametric architecture','Research objective, facility constraints and open choices.','Parametric architecture and material/inspection questions.','Can start with explicit provisional assumptions.','Unknowns are recorded; no safety-critical fabrication is released.'],
+    ['Concepts / bounds','Materials / thermal study','Provisional CFD bounds, compatibility needs and facility interfaces.','Concept options and sensitivity-based structural/thermal assessments.','Runs beside CFD; material selection depends on propellant decision.','Concepts show which uncertain loads prevent final release.'],
+    ['Detailed design','Review before release','G1 interfaces, relevant evidence and professional engineering review.','Reviewed fabrication packages and acceptance requirements.','G1 baseline; affected design held if validation or review is incomplete.','Pressure-containing and combustion-critical packages clear G2 reviews.'],
+    ['Released fabrication','Inspection / traceability','G2-approved packages and qualified suppliers.','Manufactured, inspected, traceable parts.','G2 approval for each safety-critical package; approved procurement.','Inspection findings and deviations are resolved before acceptance.'],
+    ['Assemble & inspect','Support commissioning','Accepted parts, interfaces and assembly documentation.','As-built configuration and commissioning support.','Part acceptance and approved facility commissioning plan.','Assembly discrepancies closed; acceptable condition established for G3.'],
+    ['Hardware check','Protect baseline','Authorised testing records and inspection observations.','Documented hardware condition and change requests if needed.','G4 before combustion tests; renewed review for affected changes.','Damage or non-conformance triggers controlled review, not automatic reuse.'],
+    ['Revision decision','Evidence-led next version','Inspection history, thermal evidence and model comparison.','Retain/revise recommendation and next-version requirements.','Reviewed evidence; any revision returns through G2 and downstream approvals.','G5 decision includes hardware condition and limitations.']
+  ]},
+  {name:'Feed systems & controls',sub:'Supply / protective functions',owner:'Feed systems & controls lead',short:'Feed / controls',rows:[
+    ['Scope interfaces','Supply-system assessment','Facility inventory, open engine class and propellant choice.','Interface needs and professional-review scope.','Capability survey can start immediately.','Unresolved compatibility and supply requirements are visible.'],
+    ['System architecture','Professional engineering','Operating assumptions, facility constraints and hazard inputs.','Supply/control architecture and interface definitions.','Configuration and propellant decisions constrain final selection.','Qualified reviewers agree the concept is suitable for detailed work.'],
+    ['Detailed engineering','Reviewed components','G1 baseline and approved engineering requirements.','Reviewed component specifications and control requirements.','Relevant design and hazard reviews; critical purchases are staged.','Safety-critical design packages satisfy G2 release conditions.'],
+    ['Assemble & verify','Controls / protective logic','Released components and approved requirements.','Verified controls and documented system assembly.','Component acceptance and approved release.','Functional evidence is recorded against reviewed requirements.'],
+    ['Commission systems','Non-reacting acceptance','As-built system and authorised commissioning scope.','Commissioning evidence and closed discrepancies.','Approved non-reacting work; diagnostic and facility availability.','Protective functions and supply-system acceptance support G3.'],
+    ['Test support','Approved scope','G3 records and independent test authorisation.','Configuration-controlled support and recorded system response.','G4; no hazardous operation by schedule alone.','Operation remains within institutionally authorised scope.'],
+    ['Reliability review','Update requirements','System records and configuration/change history.','Reliability findings and next-version requirements.','Reviewed experiments and engineering observations.','G5 receives unresolved limitations and required corrective actions.']
+  ]},
+  {name:'Diagnostics & data',sub:'Measurement / evidence',owner:'Diagnostics & data lead',short:'Diagnostics',rows:[
+    ['Define measurements','Evidence before equipment','Demonstration objective and relevant experimental literature.','Measurement questions and evidence criteria.','Starts alongside reference selection.','Criteria distinguish rotating detonation from combustion alone.'],
+    ['Sensors & DAQ','Uncertainty / interfaces','Wave expectations, environment bounds and facility constraints.','Instrument requirements and uncertainty budget.','G1 interface alignment; final specifications depend on resolved conditions.','Required observables, compatibility and uncertainty are reviewed.'],
+    ['Analysis software','Calibration planning','Measurement plan, provisional signals and acquisition specifications.','Versioned analysis workflow and calibration plan.','Independent software work can precede hardware delivery.','Synthetic-data checks are labelled as software checks, not physical validation.'],
+    ['Calibrate / sync','Acquisition checks','Delivered instruments and traceable references.','Calibration records and synchronisation verification.','Instrument arrival; approved calibration arrangements.','Measurement chain meets reviewed requirements.'],
+    ['Measure cold flow','Data quality / discrepancies','Approved commissioning and calibrated acquisition.','Quality-assessed non-reacting dataset.','System and facility readiness for non-reacting work.','Usable data and comparison discrepancies are addressed for G3.'],
+    ['Wave evidence','No proxy for proof','Authorised test records and synchronised measurements.','Evidence-based assessment of propagation and detonation.','G4 and qualified measurement chain.','Visible combustion or pressure oscillations alone are not accepted as proof.'],
+    ['Uncertainty & report','Repeatability evidence','Reviewed datasets, calibration and configuration records.','Repeatability analysis and traceable data release.','Valid interpretation; unresolved evidence issues explicitly retained.','G5 claims are bounded by actual measurements and uncertainty.']
+  ]},
+  {name:'Facility & safety',sub:'Capability / institutional review',owner:'Faculty / facility safety lead',short:'Facility',rows:[
+    ['Assess facility gaps','Approval status unknown','Facility records, institutional requirements and available expertise.','Capability-gap and approval-status assessment.','Starts immediately; approved combustion facility is NOT assumed as a fact.','Existing capability and missing authorisations are distinguished.'],
+    ['Hazards & approvals','Institutional review','Concepts, propellant decision and operational scope.','Hazard assessment and approval route.','Early concepts; revisit when relevant choices change.','Responsible institutional reviewers identify required safeguards and evidence.'],
+    ['Protection & review','Facility plan / authorisations','Hazard findings and reviewed system interfaces.','Facility implementation and acceptance requirements.','Institutional review; procurement tied to approved requirements.','Outstanding approval/facility issues are explicit, with accountable owners.'],
+    ['Prepare & train','Facility acceptance evidence','Approved facility work and training requirements.','Prepared facility, records and trained personnel.','Required permissions and specialist work; development may extend schedule.','Facility acceptance evidence meets institutional requirements.'],
+    ['Readiness dossier','Independent review request','G3 evidence from all workstreams.','Complete dossier for external independent authority.','G3 acceptance; discrepancies closed before G4 is considered.','Submission is complete; project team cannot authorise its own G4.'],
+    ['Safety oversight','Approval, not date','Independent G4 decision and authorised scope.','Oversight and documented adherence to approval.','G4; changed hazards/configuration require renewed review.','Safety-critical and hazardous activities remain institutionally governed.'],
+    ['Review & closeout','Lessons / approval impacts','Test, inspection and incident/deviation records.','Safety closeout and next-version review requirements.','Complete records and responsible reviewer input.','G5 captures approval implications of any proposed change.']
+  ]},
+  {name:'Procurement & integration',sub:'Interfaces / configuration',owner:'Integration & procurement lead',short:'Integration',rows:[
+    ['Budget & lead times','Ownership / supplier survey','Scope, staffing and preliminary equipment needs.','Resourcing assumptions and lead-time register.','Starts immediately; funding and team adequacy remain unresolved.','Owners, uncertainties and long-lead risks are visible.'],
+    ['Quotes & early buys','Only settled specifications','Supplier responses and approved requirements.','Staged purchasing plan and shared interface baseline.','Low-regret purchases only; G1 aligns interfaces.','Unsettled specifications do not become premature commitments.'],
+    ['Staged procurement','Configuration-controlled','G1 interfaces and reviewed purchase packages.','Orders tied to approved specifications.','Relevant G2 review before critical hardware release/purchase.','Lead times and dependencies are incorporated into an updated plan.'],
+    ['Delivery & interfaces','Track / accept / re-plan','Supplier status, inspection results and released baselines.','Accepted deliveries and updated controlling chain.','Vendor lead times; qualified substitutes need impact review.','No substitution silently changes safety-critical requirements.'],
+    ['Integrate baseline','Resolve open items','Accepted hardware, controls, diagnostics and facility evidence.','As-built baseline and consolidated G3 evidence.','All affected commissioning branches must satisfy acceptance.','Material integration discrepancies are closed before G3.'],
+    ['Control changes','Authorised work','G4 decision and current configuration.','Traceable experiment/configuration records.','Approved scope; changes return to affected gates.','No unreviewed configuration enters authorised testing.'],
+    ['Report & next version','G5 decision package','Evidence and limitations from all workstreams.','Project report, data package and next-version decision.','Consolidated findings and funding/resource review.','G5 records success, limitations or non-demonstration honestly.']
+  ]}
+];
+const decisions=[
+ {id:'class',title:['Engine configuration','Rocket-type / air-breathing?'],targets:[[0,0],[1,0],[2,0],[4,0]],unlocks:'Configuration-specific reference selection, architecture, supply requirements and facility review.',gate:'G0 scope agreement',owner:'Faculty / integration with all technical leads'},
+ {id:'propellant',title:['Propellants','UNDECIDED'],targets:[[0,1],[1,1],[2,1],[3,1],[4,1]],unlocks:'Mixture-specific CFD, feed compatibility, materials, thermal loads, diagnostic requirements and facility approvals. No candidates or operating values are selected.',gate:'G1 interface baseline; affected G2 releases remain held',owner:'Qualified combustion, systems and institutional reviewers'},
+ {id:'conditions',title:['Dimensions / conditions','TBD: reviewed design'],targets:[[0,2],[1,2],[2,2],[3,1]],unlocks:'Provisional load bounds, thermal/structural requirements, system specifications and measurement ranges. No dimensions or operating values are supplied.',gate:'G1 baseline; G2 reviewed release',owner:'Combustion, mechanical and systems leads'},
+ {id:'duration',title:['Operating duration','TBD: reviewed design'],targets:[[1,1],[1,2],[3,1],[4,1]],unlocks:'Thermal duty assessment, hardware condition criteria, measurement duration and institutional review scope.',gate:'G1 baseline; affected G2 releases',owner:'Mechanical / thermal, diagnostics and facility leads'},
+ {id:'resources',title:['Budget / team size','Expertise available?'],targets:[[5,0],[5,1]],unlocks:'Workstream capacity, specialist support, computing access and staged procurement. Adequate staffing and funding are not confirmed.',gate:'G0 scope agreement; rebaseline at G1 if changed',owner:'Faculty sponsor / integration lead'},
+ {id:'facility',title:['Facility / approvals','Procurement lead times?'],targets:[[4,0],[4,1],[5,0],[5,3]],unlocks:'Feasible schedule, facility development scope, approval route and purchasing sequence. An approved combustion facility has not been established.',gate:'G0 feasibility; G1 interfaces; G3/G4 readiness',owner:'Facility lead / institutional authority / procurement'}
+];
+const gates=[
+ {id:'G0',x:415,name:'Scope agreement',label:['Scope','agreement'],owner:'Faculty sponsor and workstream leads',input:'Engine class, research objective, facility gaps, staffing and budget assumptions.',deliverable:'Agreed project scope and accountable owners.',accept:'A supportable route exists; unresolved assumptions and decisions are recorded.',dependency:'Initial feasibility and scope work across the team.'},
+ {id:'G1',x:570,name:'Interface baseline',label:['Interface','baseline'],owner:'Integration lead with all workstream leads',input:'Shared interfaces, measurement needs and provisional operating/load bounds.',deliverable:'Versioned interface baseline and controlled unknowns.',accept:'Each downstream owner accepts interfaces and knows what remains provisional.',dependency:'G0 scope; adequate concept work and decision resolution.'},
+ {id:'G2',x:725,name:'Design release',label:['Design','release'],owner:'Qualified engineering reviewers / authorised institutional signatories',input:'Relevant validation evidence, reviewed designs, hazard findings and acceptance criteria.',deliverable:'Staged, approved fabrication and purchase packages.',accept:'Pressure-containing and combustion-critical hardware cannot be released until its reviews are complete.',dependency:'G1 and relevant design/evidence reviews. Affected packages remain held after validation failure.'},
+ {id:'G3',x:1035,name:'Commissioning acceptance',label:['Commissioning','acceptance'],owner:'Responsible engineering and facility acceptance reviewers',input:'As-built records, inspected hardware, calibrated diagnostics and non-reacting commissioning evidence.',deliverable:'Accepted integrated configuration with material discrepancies closed.',accept:'All relevant branches accepted; model/commissioning disagreements resolved before G4 consideration.',dependency:'Accepted hardware, feed/control systems, diagnostics and facility readiness.'},
+ {id:'G4',x:1057,name:'Independent test authorisation',label:['Independent test','authorisation'],owner:'Independent institutional review / approval authority, OUTSIDE the project team',input:'G3 acceptance dossier, reviewed hazards and proposed authorised scope.',deliverable:'Explicit independent authorisation, or a hold with required corrective actions.',accept:'Only the independent authority can permit the defined combustion-test scope; timing never substitutes for approval.',dependency:'G3 accepted and institutional readiness requirements satisfied. Renew approval when affected by change.'},
+ {id:'G5',x:1385,name:'Demonstration review',label:['Demonstration','review'],owner:'Faculty research review with relevant technical/safety reviewers',input:'Wave evidence, repeatability, uncertainty, hardware condition and limitations.',deliverable:'Supported demonstration conclusion and next-version decision.',accept:'Do not claim success without sufficient evidence; a non-demonstration result is valid and must be reported.',dependency:'Reviewed experimental/diagnostic evidence. Any new hardware version returns through G1/G2 and affected approvals.'}
+];
+const recoveryData=[
+ {id:'validation',title:'CFD validation fails',lines:['Simpler benchmarks; chemistry / grid','Widen provisional bounds; HOLD release'],gate:'G2',owner:'Combustion & CFD + mechanical leads',input:'Benchmark disagreement or unresolved numerical/chemistry sensitivity.',deliverable:'Corrected and revalidated model, revised provisional load bounds and reviewed design impacts.',dependency:'Return to simpler benchmarks; do not release affected safety-critical design packages.',accept:'Relevant evidence and engineering reviews satisfy G2 before affected release.',note:'Wider uncertainty is not permission to fabricate. Affected releases stay on hold.'},
+ {id:'parts',title:'Parts arrive late',lines:['Reorder; pull independent work forward','Review non-critical substitutes; re-plan'],gate:'G1',owner:'Procurement / integration with affected technical leads',input:'Updated delivery estimates or unavailable components.',deliverable:'Rebaselined sequence and controlling chain; reviewed non-critical substitutions where appropriate.',dependency:'Return to G1 interface baseline; a changed design also needs G2 review.',accept:'Interfaces and procurement changes are approved; safety-critical requirements are not bypassed.',note:'Return mapping to G1 is a draft governance choice. Delay can consume or extend the allowance.'},
+ {id:'rework',title:'Hardware finding / damage',lines:['Change request; re-review; re-release','Re-inspect; repeat affected acceptance'],gate:'G2',owner:'Mechanical lead + qualified reviewers / integration',input:'Inspection finding, non-conformance, damage or unacceptable post-test condition.',deliverable:'Controlled change, revised released package and re-inspection evidence.',dependency:'Return to G2; re-enter G1 if interfaces change, then repeat affected G3 and G4 approval.',accept:'Revised hardware and affected systems pass review/acceptance; no automatic return to testing.',note:'A post-test revision does not inherit authorisation without an impact review.'},
+ {id:'discrepancy',title:'Cold-flow / model disagree',lines:['Resolve measurement / model mismatch','G4 stays blocked until acceptance'],gate:'G3',owner:'CFD, diagnostics and responsible engineering leads',input:'Material disagreement between non-reacting measurements and corresponding predictions.',deliverable:'Documented cause, corrective actions and updated comparison.',dependency:'Return to G3; if design changes, first re-enter G1/G2 as affected.',accept:'Material discrepancies closed before G4 is even considered.',note:'Matching a model is not the only criterion: both measurement validity and model limitations must be examined.'},
+ {id:'no-wave',title:'No convincing detonation evidence',lines:['Review diagnostics and interpretation','G5: honest result / next-version choice'],gate:'G5',owner:'Diagnostics + combustion leads / faculty research review',input:'Combustion test does not establish rotating detonation.',deliverable:'Evidence audit, bounded conclusion and next-version recommendation.',dependency:'Diagnostics review precedes G5; a new version returns through G1/G2 and renewed affected approvals.',accept:'Visible combustion or pressure oscillations alone are not accepted as proof.',note:'G5 is a review, not a mandatory success stamp. Non-demonstration is recorded, not relabelled.'}
+];
+const scenarios={
+ baseline:{label:'Illustrative baseline',text:'Illustrative controlling chain: reviewed mechanical release -> accepted hardware -> all-branch G3 -> independent G4 -> evidence -> G5. Actual critical path is unknown until durations, resources and dependencies are resolved.',points:[[1,2],[1,3],[1,4]],blocked:[]},
+ facility:{label:'Facility approval / development',text:'Facility approval or development becomes controlling. Preparation and institutional acceptance delay G3; independent G4 remains mandatory. The approved-facility premise is unconfirmed, and development may extend well beyond 28 weeks.',points:[[4,0],[4,1],[4,2],[4,3],[4,4]],blocked:[[4,2],[4,3],[4,4]]},
+ parts:{label:'Long-lead procurement',text:'Pressure-rated components, valves, sensors or DAQ become controlling. Pull independent analysis/software work forward; review non-critical substitutes; rebaseline G1. Missing accepted equipment holds integration and G3.',points:[[5,0],[5,1],[5,2],[5,3],[5,4]],blocked:[[5,3],[1,4],[3,3]]},
+ validation:{label:'Failed CFD validation',text:'Failed benchmark validation holds affected G2 release. Revisit simpler benchmarks, chemistry and grid assumptions; widen provisional bounds. Unaffected work continues, but affected fabrication cannot pass the release gate.',points:[[0,1],[0,2],[1,2],[1,3],[1,4]],blocked:[[0,1],[0,2],[1,2]]},
+ rework:{label:'Fabrication / inspection rework',text:'Inspection findings or hardware revision become controlling. Change request -> G2 re-review/re-release -> re-inspection -> G3. Changed interfaces also return to G1; changed test configuration needs renewed affected G4 approval.',points:[[1,2],[1,3],[1,4]],blocked:[[1,3],[1,4]]}
+};
+let selectedDecision='propellant';
+let activeScenario='baseline';
+let layout={};
+const state={decisions:true,footprints:true,recoveries:true,critical:true};
+const atlas=$('atlas');
+function el(name,attrs={},parent=atlas){
+  const n=document.createElementNS(NS,name);
+  for(const [key,value] of Object.entries(attrs))n.setAttribute(key,String(value));
+  if(parent)parent.appendChild(n);
+  return n;
+}
+function text(parent,x,y,content,cls='',attrs={}){
+  const t=el('text',{x,y,class:cls,...attrs},parent);
+  if(Array.isArray(content))content.forEach((line,i)=>{const s=el('tspan',{x,dy:i?15:0},t);s.textContent=line;});
+  else t.textContent=content;
+  return t;
+}
+function path(parent,d,cls='',attrs={}){return el('path',{d,class:cls,...attrs},parent);}
+function title(parent,s){const t=el('title',{},parent);t.textContent=s;}
+function showDetail(kind,name,owner,input,deliverable,dependency,accept,note,status='ASSUMPTION / draft execution criteria'){
+  hideTip();
+  $('detail-kicker').textContent=kind;
+  $('detail-status').textContent=status;
+  $('detail-title').textContent=name;
+  $('detail-fields').replaceChildren();
+  for(const [key,value] of Object.entries({Owner:owner,Inputs:input,Deliverable:deliverable,Dependency:dependency,'Acceptance criterion':accept})){
+    const dt=document.createElement('dt');dt.textContent=key;
+    const dd=document.createElement('dd');dd.textContent=value;
+    $('detail-fields').append(dt,dd);
+  }
+  $('detail-note').textContent=note;
+  $('detail').showModal();
+  $('close-detail').focus();
+}
+function bindAction(node,action,tip){
+  node.addEventListener('click',action);
+  node.addEventListener('keydown',event=>{
+    if(event.key==='Enter'||event.key===' '){event.preventDefault();action();}
+    if(event.key==='Escape')hideTip();
+  });
+  if(tip){
+    node.addEventListener('pointerenter',event=>showTip(tip,event.clientX,event.clientY));
+    node.addEventListener('pointermove',event=>positionTip(event.clientX,event.clientY));
+    node.addEventListener('pointerleave',hideTip);
+    node.addEventListener('focus',()=>{
+      const box=node.getBoundingClientRect();showTip(tip,box.left+Math.min(box.width/2,120),box.bottom);
+    });
+    node.addEventListener('blur',hideTip);
+  }
+}
+function positionTip(x,y){
+  const tip=$('tooltip');
+  tip.style.left=Math.max(8,Math.min(x+12,innerWidth-tip.offsetWidth-12))+'px';
+  tip.style.top=Math.max(8,Math.min(y+14,innerHeight-tip.offsetHeight-12))+'px';
+}
+function showTip(s,x,y){$('tooltip').textContent=s;$('tooltip').style.display='block';positionTip(x,y);}
+function hideTip(){$('tooltip').style.display='none';}
+function taskBox(r,c){
+  const x=c===5?1070:edges[c]+8;
+  return {x,y:layout.laneTop+r*92+22,w:edges[c+1]-x-8,h:53};
+}
+function taskOpen(r,c){
+  selectProjectTask(r,c);
+  const lane=lanes[r],row=lane.rows[c];
+  showDetail(lane.name+' / '+windows[c],row[0],lane.owner,row[2],row[3],row[4],row[5],
+    'Planned work only; nothing is marked complete. Exact task timing, owner allocation and acceptance criteria are draft assumptions for institutional review.');
+}
+function gateOpen(g){
+  selectProjectGate(g.id);
+  showDetail('Decision gate / '+g.id,g.name,g.owner,g.input,g.deliverable,g.dependency,g.accept,
+    g.id==='G4'?'Authority sits outside the project team. The tentative test window is not permission to test.':
+    'Gate identity and core constraints are given. Calendar position, detailed ownership and acceptance wording are planning assumptions.',
+    'GIVEN gate / ASSUMED timing & detailed criteria');
+}
+function render(){
+  hideTip();
+  layout={header:state.decisions?172:40,laneTop:state.decisions?279:147};
+  layout.laneEnd=layout.laneTop+6*92;
+  layout.merge=layout.laneEnd+25;
+  layout.recoveryTop=layout.merge+54;
+  layout.risk=state.recoveries?layout.recoveryTop+178:layout.merge+54;
+  layout.height=layout.risk+92;
+  atlas.setAttribute('viewBox',`0 0 1440 ${layout.height}`);
+  atlas.replaceChildren();
+  title(atlas,'RDE project atlas: parallel work, evidence, decision gates and recovery');
+  atlas.firstChild.id='map-title';
+  const desc=el('desc',{id:'map-desc'});
+  desc.textContent='Six concurrent workstreams across seven planning windows. Dashed tasks are planned assumptions, not completed work. Hollow open decisions unlock downstream tasks. G2 blocks critical fabrication until reviews; all branches must satisfy G3 before independent G4 authorisation. Amber recovery paths return to specific gates. Purple paths illustrate conditional critical-path shifts. The schedule assumes, but does not establish, an approved existing facility.';
+  const defs=el('defs');
+  for(const [id,color] of [['cool-arrow','var(--cool)'],['warm-arrow','var(--warm)'],['critical-arrow','var(--accent)']]){
+    const m=el('marker',{id,viewBox:'0 0 10 10',refX:8,refY:5,markerWidth:6,markerHeight:6,orient:'auto-start-reverse'},defs);
+    el('path',{d:'M 0 0 L 10 5 L 0 10 z',fill:color},m);
+  }
+  const hatch=el('pattern',{id:'risk-hatch',width:9,height:9,patternUnits:'userSpaceOnUse',patternTransform:'rotate(35)'},defs);
+  el('line',{x1:0,y1:0,x2:0,y2:9,stroke:'var(--warm)','stroke-width':1,opacity:.22},hatch);
+  drawBackground();
+  drawGateLines();
+  if(state.critical)drawCriticalPath();
+  if(state.decisions)drawDecisionLinks();
+  if(state.footprints)drawFootprints();
+  drawTasks();
+  drawGateHeads();
+  if(state.decisions)drawDecisions();
+  drawMerge();
+  if(state.recoveries)drawRecoveries();
+  drawRisk();
+  $('scenario-text').textContent=state.critical?scenarios[activeScenario].text:'Critical-path layer hidden. Gates and mandatory dependencies remain visible. Scenario chains are illustrative assumptions, not a calculated schedule.';
+  $('scenario').disabled=!state.critical;
+  syncSelection();
+}
+function drawBackground(){
+  text(atlas,20,layout.header-14,'SIX RESPONSIBILITY AREAS','section');
+  text(atlas,260,layout.header-14,'OPTIMISTIC, CHALLENGED  /  PLANNING WINDOWS, NOT A FORECAST','section');
+  for(let c=0;c<7;c++){
+    const x=edges[c],w=edges[c+1]-x;
+    el('rect',{x,y:layout.header,width:w-2,height:47,rx:5,fill:c===5?'var(--cool-soft)':'var(--soft)'});
+    text(atlas,x+10,layout.header+18,windows[c],'label');
+    text(atlas,x+10,layout.header+35,phaseNames[c],'tiny muted');
+  }
+  for(let r=0;r<6;r++){
+    const y=layout.laneTop+r*92;
+    el('rect',{x:12,y,width:1403,height:89,rx:7,class:'lane-bg'});
+    text(atlas,24,y+33,String(r+1).padStart(2,'0'),'small muted');
+    text(atlas,49,y+33,lanes[r].name,'label');
+    text(atlas,49,y+52,lanes[r].sub,'tiny muted');
+    text(atlas,49,y+70,'PARALLEL / PLANNED','tiny muted');
+    path(atlas,`M 246 ${y+10} V ${y+79}`,'lane-rule');
+    for(let c=0;c<6;c++){
+      const b=taskBox(r,c),n=taskBox(r,c+1);
+      path(atlas,`M ${b.x+b.w} ${b.y+26} H ${n.x}`,'lane-rule');
+    }
+  }
+  text(atlas,20,layout.header+73,['Tasks + exact gate timing: ASSUMPTION','Dashed cards = draft; no progress claimed'],'tiny muted');
+}
+function drawGateLines(){
+  gates.forEach(g=>{
+    path(atlas,`M ${g.x} ${layout.header+83} V ${layout.laneEnd+5}`,g.id==='G4'?'gate-line authority-line':'gate-line');
+  });
+  const y=layout.laneTop+92+8;
+  el('rect',{x:728,y,width:150,height:12,rx:2,fill:'var(--warm-soft)'});
+  text(atlas,733,y+9,'REVIEWED PACKAGES ONLY','tiny warm-text',{'font-size':9});
+  path(atlas,`M 721 ${y+1} h 7 M 725 ${y+1} v 74 M 721 ${y+75} h 7`,'',{stroke:'var(--warm)','stroke-width':3,fill:'none'});
+}
+function drawGateHeads(){
+  gates.forEach(g=>{
+    const isExternal=g.id==='G4';
+    const gx=g.x,gy=layout.header+69;
+    const group=el('g',{role:'button',tabindex:0,'aria-label':g.id+': '+g.name+(isExternal?', independent authority outside the team':''),'data-gate':g.id});
+    el('rect',{x:isExternal?1086:gx-19,y:isExternal?layout.header+49:gy-16,width:isExternal?250:38,height:isExternal?50:31,rx:6,class:'gate-focus-halo'},group);
+    if(isExternal){
+      el('rect',{x:1090,y:layout.header+53,width:242,height:42,rx:6,fill:'var(--authority)',stroke:'var(--cool)','stroke-width':2,class:'focus-target'},group);
+      text(group,1101,layout.header+69,'G4  INDEPENDENT REVIEW / APPROVAL','tiny',{'style':'fill:#fff;font-weight:750'});
+      text(group,1101,layout.header+84,'Outside team / no date-based permission','tiny',{'style':'fill:#fff'});
+      path(group,`M 1090 ${layout.header+75} H ${gx} V ${layout.header+100}`,'',{stroke:'var(--cool)','stroke-width':2,fill:'none'});
+      el('rect',{x:gx-7,y:layout.header+89,width:14,height:14,fill:'var(--cool)',stroke:'var(--surface)','stroke-width':2},group);
+    }else{
+      const labelX=g.id==='G5'?gx-18:gx;
+      el('rect',{x:gx-15,y:gy-12,width:30,height:23,rx:4,class:'gate-box focus-target'},group);
+      text(group,gx,gy+4,g.id,'small',{'text-anchor':'middle','font-weight':800});
+      text(group,labelX,gy+25,g.label,'tiny muted',{'text-anchor':g.id==='G5'?'end':'middle'});
+    }
+    bindAction(group,()=>gateOpen(g),g.id+' / '+g.name+'. Open gate criteria.');
+  });
+}
+function drawTasks(){
+  const chosen=state.decisions?decisions.find(d=>d.id===selectedDecision):null;
+  const block=state.critical?scenarios[activeScenario].blocked:[];
+  lanes.forEach((lane,r)=>lane.rows.forEach((row,c)=>{
+    const b=taskBox(r,c);
+    const highlighted=chosen&&chosen.targets.some(([rr,cc])=>r===rr&&c===cc);
+    const blocked=block.some(([rr,cc])=>r===rr&&c===cc);
+    const g=el('g',{class:'task'+(highlighted?' decision-highlight':'')+(blocked?' block-highlight':''),role:'button',tabindex:0,'data-task':r+'-'+c,'aria-label':lane.name+', '+windows[c]+': '+row[0]+'. Planned assumption. Open details.'});
+    el('rect',{x:b.x,y:b.y,width:b.w,height:b.h,rx:6,class:'task-box focus-target'},g);
+    text(g,b.x+9,b.y+18,row[0],'task-title');
+    text(g,b.x+9,b.y+34,row[1],'task-caption');
+    text(g,b.x+9,b.y+46,'A','assumption-mark');
+    text(g,b.x+b.w-12,b.y+46,'+','task-chevron');
+    bindAction(g,()=>taskOpen(r,c),lane.owner+' | '+row[0]+'. Click for inputs, deliverable, dependencies and acceptance.');
+    g.addEventListener('keydown',event=>{
+      let rr=r,cc=c;
+      if(event.key==='ArrowRight')cc=Math.min(6,c+1);
+      else if(event.key==='ArrowLeft')cc=Math.max(0,c-1);
+      else if(event.key==='ArrowDown')rr=Math.min(5,r+1);
+      else if(event.key==='ArrowUp')rr=Math.max(0,r-1);
+      else if(event.key==='Home')cc=0;
+      else if(event.key==='End')cc=6;
+      else return;
+      event.preventDefault();atlas.querySelector(`[data-task="${rr}-${cc}"]`).focus();
+    });
+  }));
+}
+function drawDecisions(){
+  text(atlas,20,20,'UNRESOLVED CHOICES / CLICK TO TRACE UNLOCKS','section');
+  text(atlas,1410,20,'HOLLOW = STILL UNDECIDED','tiny muted',{'text-anchor':'end'});
+  decisions.forEach((d,i)=>{
+    const width=(1390-(decisions.length-1)*12)/decisions.length;
+    const x=20+i*(width+12);
+    const g=el('g',{class:d.id===selectedDecision?'decision-selected':'',role:'button',tabindex:0,'data-decision':d.id,'aria-pressed':d.id===selectedDecision,'aria-label':'Unresolved decision: '+d.title.join('. ')+'. Select to trace downstream tasks.'});
+    el('rect',{x,y:32,width,height:52,rx:7,class:'decision-box focus-target'},g);
+    el('circle',{cx:x+14,cy:49,r:4,fill:'none',stroke:'var(--muted)','stroke-dasharray':'2 2'},g);
+    text(g,x+26,51,d.title[0],'label');
+    text(g,x+26,70,d.title[1],'small muted');
+    bindAction(g,()=>{
+      selectedDecision=d.id;render();
+      atlas.querySelector(`[data-decision="${d.id}"]`).focus({preventScroll:true});
+      $('announcement').textContent='Unresolved: '+d.title[0]+'. Unlocks: '+d.unlocks;
+    },d.unlocks);
+  });
+  const d=decisions.find(item=>item.id===selectedDecision);
+  const labels={
+    class:['Unlocks: reference selection / architecture / supply requirements / facility review','Resolve for G0; later changes return to the affected interface and design gates.'],
+    propellant:['Unlocks: CFD / feed compatibility / materials / thermal loads / diagnostics / facility approvals','Choice remains OPEN. No candidates, ratios, pressures or dimensions are selected.'],
+    conditions:['Unlocks: load bounds / thermal assessment / system specifications / measurement needs','Dimensions, operating conditions and duration remain OPEN. G1 baseline -> G2 reviewed release.'],
+    duration:['Unlocks: thermal duty / condition criteria / measurement duration / institutional review scope','Operating duration remains OPEN. It is not a value implied by this illustration.'],
+    resources:['Unlocks: workstream capacity / specialist support / computing / staged procurement','Budget, team size and expertise remain OPEN. Adequate resources are an assumption, not a fact.'],
+    facility:['Unlocks: feasible schedule / facility scope / approval route / purchasing sequence','Existing approved combustion capability is NOT established. G0 feasibility -> G3/G4 readiness.']
+  };
+  text(atlas,22,106,labels[d.id][0],'small cool-text');
+  text(atlas,22,124,labels[d.id][1],'small muted');
+  const g=el('g',{role:'button',tabindex:0,'aria-label':'Open details for unresolved '+d.title[0]});
+  el('rect',{x:1273,y:93,width:136,height:30,rx:5,class:'decision-box focus-target'},g);
+  text(g,1285,113,'Decision detail +','small');
+  bindAction(g,()=>showDetail('Open decision',d.title[0],d.owner,'Institutional requirements, capability evidence and research objectives.',d.unlocks,d.gate,'A qualified, recorded decision and impact review; downstream assumptions updated.','Selection in this visualisation highlights dependencies only. It does not resolve the decision.','DECISION STILL REQUIRED'));
+}
+function drawDecisionLinks(){
+  const d=decisions.find(item=>item.id===selectedDecision);
+  const width=(1390-(decisions.length-1)*12)/decisions.length;
+  const i=decisions.indexOf(d),x=20+i*(width+12)+width/2;
+  path(atlas,`M ${x} 84 V 89 H 239 V ${layout.laneTop+5*92+12}`,'link',{'opacity':.45});
+  d.targets.forEach(([r,c])=>{
+    const b=taskBox(r,c),y=b.y-7;
+    path(atlas,`M 239 ${y} H ${b.x+19} V ${b.y}`,'link',{'marker-end':'url(#cool-arrow)','opacity':.8});
+    if(d.id==='propellant'&&r===1)text(atlas,b.x+30,b.y-10,'materials + thermal loads','tiny cool-text');
+  });
+}
+function drawFootprints(){
+  const y=layout.laneTop+10;
+  const marks=[
+    [276,'0D','Thermochemistry: planned; not yet validated.'],
+    [330,'CJ/ZND','Detonation reference: planned; not yet validated.'],
+    [434,'1D','Reactive-wave benchmark: planned; not yet validated.'],
+    [495,'2D','Periodic RDE baseline: planned; not yet validated.'],
+    [743,'3D?','Selective 3D only where justified; no result exists yet.']
+  ];
+  path(atlas,`M 276 ${y} H 814`,'link',{'stroke-dasharray':'2 4'});
+  marks.forEach(([x,label,tip])=>{
+    el('circle',{cx:x,cy:y,r:5,class:'evidence'});
+    const t=text(atlas,x+9,y+3,label,'tiny cool-text');title(t,tip);
+  });
+  const feeds=[
+    {x:613,to:1,label:'load ranges'},
+    {x:655,to:2,label:'injector sensitivities'},
+    {x:802,to:3,label:'wave modes / measurement needs'}
+  ];
+  feeds.forEach(f=>{
+    const start=layout.laneTop+78,end=layout.laneTop+f.to*92+13;
+    path(atlas,`M ${f.x} ${start} V ${end} H ${f.x+18}`,'link',{'marker-end':'url(#cool-arrow)','opacity':.65});
+    text(atlas,f.x+23,end+3,f.label,'tiny cool-text');
+  });
+  const fromY=layout.laneTop+3*92+80;
+  path(atlas,`M 1300 ${fromY} H 1406 V ${layout.laneTop+10} H 1232`,'link',{'marker-end':'url(#cool-arrow)'});
+  text(atlas,1198,layout.laneTop+13,'DATA -> MODEL COMPARISON','tiny cool-text');
+  const t=text(atlas,1400,layout.laneTop+175,'EXPERIMENTAL RETURN','tiny cool-text',{transform:`rotate(90 1400 ${layout.laneTop+175})`});
+  title(t,'Future experimental data returns to model calibration/comparison; comparison is not automatic validation.');
+}
+function drawCriticalPath(){
+  const p=scenarios[activeScenario].points;
+  let d='';
+  p.forEach(([r,c],i)=>{
+    const b=taskBox(r,c),x=b.x+15,y=b.y+b.h+6;
+    if(i===0)d=`M ${x} ${y}`;
+    else{
+      const [pr,pc]=p[i-1],prev=taskBox(pr,pc);
+      const px=prev.x+15;
+      if(r===pr)d+=` H ${x}`;
+      else d+=` H ${Math.max(px,x)-7} V ${y} H ${x}`;
+    }
+  });
+  const last=taskBox(...p[p.length-1]),exit=last.x+last.w-8;
+  d+=` H ${exit} V ${layout.merge} H 1035`;
+  path(atlas,d,'critical',{'opacity':.85});
+  path(atlas,`M 1035 ${layout.merge} H 1057 V ${layout.laneTop+3*92+82} H 1194 V ${layout.laneTop+82} H 1378 V ${layout.merge}`,'critical',{'marker-end':'url(#critical-arrow)','opacity':.85});
+}
+function drawMerge(){
+  const y=layout.merge;
+  text(atlas,20,y-1,'ALL-BRANCH READINESS','section');
+  text(atlas,20,y+16,'The slowest accepted branch controls.','tiny muted');
+  path(atlas,`M 884 ${layout.laneTop+14} V ${y} H 1028`,'',{'stroke':'var(--muted)','stroke-width':1.5,fill:'none','stroke-dasharray':'2 4'});
+  for(let r=0;r<6;r++){
+    const b=taskBox(r,4);
+    el('circle',{cx:884,cy:b.y+b.h+6,r:3,fill:'var(--surface)',stroke:'var(--muted)'});
+  }
+  text(atlas,266,y-1,'Accepted hardware + feed/controls + diagnostics + facility + resolved discrepancies','small muted');
+  path(atlas,`M 1028 ${y} H 1075`,'',{'stroke':'var(--cool)','stroke-width':2,fill:'none','marker-end':'url(#cool-arrow)'});
+  text(atlas,1090,y+4,'G3 -> independent G4 -> tentative tests -> G5','small cool-text');
+  text(atlas,266,y+18,'No bypass: review holds stop affected releases, not every independent workstream.','tiny muted');
+}
+function drawRecoveries(){
+  const top=layout.recoveryTop;
+  text(atlas,20,top,'FAILURE & RECOVERY / SPECIFIC RE-ENTRY, NEVER A VAGUE RETRY','section');
+  text(atlas,1410,top,'GIVEN FAILURE MODES / ASSUMED RE-ENTRY ROUTING','tiny muted',{'text-anchor':'end'});
+  recoveryData.forEach((r,i)=>{
+    const x=20+i*282,cardY=top+51,w=270;
+    const gate=gates.find(g=>g.id===r.gate);
+    const channelY=top+12+i*6;
+    const emphasised=state.critical&&r.id===activeScenario;
+    path(atlas,`M ${x+135} ${cardY} V ${channelY} H ${gate.x} V ${layout.laneEnd+5}`,'recovery-path',{'marker-end':'url(#warm-arrow)','opacity':emphasised?1:.65,style:emphasised?'stroke-width:3':''});
+    const g=el('g',{role:'button',tabindex:0,'data-recovery':r.id,'aria-label':r.title+'. Recovery returns to '+r.gate+'. Open recovery details.'});
+    el('rect',{x,y:cardY,width:w,height:113,rx:7,class:'recovery-box focus-target',style:emphasised?'stroke-width:2.5':''},g);
+    text(g,x+11,cardY+20,'< '+r.title,'label warm-text');
+    text(g,x+11,cardY+43,r.lines,'tiny');
+    el('rect',{x:x+10,y:cardY+79,width:95,height:22,rx:4,fill:'var(--surface)',stroke:'var(--warm)','stroke-dasharray':'3 2'},g);
+    text(g,x+19,cardY+94,'RETURN -> '+r.gate,'tiny warm-text',{'font-weight':800});
+    text(g,x+w-17,cardY+95,'+','label warm-text');
+    bindAction(g,()=>{selectProjectRisk(r.id);showDetail('Failure & recovery / return to '+r.gate,r.title,r.owner,r.input,r.deliverable,r.dependency,r.accept,r.note,'GIVEN failure mode / ASSUMED routing');},r.title+' -> '+r.gate+'. Open the corrective-action and re-entry criteria.');
+  });
+}
+function drawRisk(){
+  const y=layout.risk;
+  el('rect',{x:20,y,width:1390,height:66,rx:7,fill:'var(--warm-soft)',stroke:'var(--warm)','stroke-dasharray':'5 4'});
+  el('rect',{x:20,y,width:1390,height:66,rx:7,fill:'url(#risk-hatch)'});
+  text(atlas,33,y+20,'SCHEDULE RISK / ALLOWANCE CAN EXTEND SUBSTANTIALLY ->','label warm-text');
+  text(atlas,33,y+39,'28-week premise: existing approved facility + adequate staffing + manageable lead times. These are ASSUMPTIONS, not confirmed capabilities.','small');
+  text(atlas,33,y+55,'Facility development, procurement delays, failed validation or redesign can move the controlling chain and every downstream milestone.','small muted');
+}
+function buildRegister(){
+  const body=$('task-register');
+  lanes.forEach((lane,r)=>lane.rows.forEach((row,c)=>{
+    const tr=document.createElement('tr');
+    const lead=document.createElement('td');
+    const b=document.createElement('button');b.textContent=row[0];b.style.padding='4px 7px';b.addEventListener('click',()=>taskOpen(r,c));
+    lead.append(b,document.createElement('br'),document.createTextNode(lane.owner+' / '+windows[c]+' / ASSUMPTION'));
+    tr.append(lead);
+    row.slice(2).forEach(value=>{const td=document.createElement('td');td.textContent=value;tr.append(td);});
+    body.append(tr);
+  }));
+}
+['decisions','footprints','recoveries','critical'].forEach(id=>$(id).addEventListener('change',()=>{
+  state[id]=$(id).checked;render();$('announcement').textContent=id+' layer '+(state[id]?'shown':'hidden')+'.';
+}));
+$('scenario').addEventListener('change',()=>{activeScenario=$('scenario').value;render();$('announcement').textContent='Illustrative scenario: '+scenarios[activeScenario].label;});
+$('close-detail').addEventListener('click',()=>$('detail').close());
+$('detail').addEventListener('click',event=>{if(event.target===$('detail')){const r=$('detail').getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)$('detail').close();}});
+$('detail').addEventListener('close',hideTip);
+document.addEventListener('keydown',event=>{if(event.key==='Escape')hideTip();});
+document.querySelector('.chart-scroll').addEventListener('scroll',hideTip);
+window.addEventListener('resize',hideTip);
+let theme='system';
+$('theme').addEventListener('click',()=>{
+  const choices=['system','light','dark'];theme=choices[(choices.indexOf(theme)+1)%choices.length];
+  if(theme==='system')document.documentElement.removeAttribute('data-theme');else document.documentElement.dataset.theme=theme;
+  $('theme').textContent='Theme: '+theme;
+  $('theme').setAttribute('aria-label','Colour theme: '+theme+'. Activate to switch to '+choices[(choices.indexOf(theme)+1)%choices.length]+'.');
+});
+</script>
+<script>
+'use strict';
+const partsData=[
+ {id:'supply',n:1,name:'Supply interface',owner:2,gates:['G1','G2','G3'],tasks:['2-0','2-1','2-2','2-3','2-4','5-2','5-3'],risks:['parts','discrepancy'],evidence:['thermo','periodic','spatial'],decision:'Engine class, propellants, conditions, facility capability and lead times.',
+  function:'Defines the boundary between professionally engineered reactant supply and the demonstrator.',
+  couplings:'Head-end injection, supply transients, control functions, compatibility and institutional facility requirements.',
+  complexity:'The upstream system responds to chamber disturbances; a steady imposed boundary may miss important coupling.',
+  failures:'Incompatible assumptions, supply/combustor interaction, component non-conformance or unavailable equipment.',
+  acceptance:'Reviewed compatibility, system interfaces, component acceptance and approved non-reacting commissioning evidence.',
+  map:[400,140],label:'Supply'},
+ {id:'head',n:2,name:'Head-end / injection assembly',owner:2,gates:['G1','G2','G3'],tasks:['0-1','0-2','0-3','1-2','2-1','2-2','2-3','2-4'],risks:['validation','rework','discrepancy','no-wave'],evidence:['thermo','reference','benchmark','periodic','spatial'],decision:'Propellants, engine class, dimensions and operating conditions.',
+  function:'Introduces reactants into the annular combustion region. Internal injection details are deliberately not shown.',
+  couplings:'Mixture replenishment, mixing, chamber pressure disturbances, feed response and thermal environment.',
+  complexity:'Mixing and refill must be compatible with the returning wave; upstream and downstream behaviour cannot be separated casually.',
+  failures:'Inadequate mixing, adverse feed coupling, non-conforming hardware or a wave mode not supported by the fresh layer.',
+  acceptance:'Qualified review of the assembly and feed coupling, relevant model limitations recorded, inspected released hardware and approved commissioning.',
+  map:[478,79],label:'Head end'},
+ {id:'chamber',n:3,name:'Outer chamber wall',owner:1,gates:['G1','G2','G3'],tasks:['0-2','0-3','1-0','1-1','1-2','1-3','1-4','1-5'],risks:['validation','parts','rework','discrepancy','no-wave'],evidence:['reference','benchmark','periodic','spatial'],decision:'Propellants, dimensions, operating conditions, duration and thermal-management approach.',
+  function:'Forms the outer boundary of the annular combustion passage.',
+  couplings:'Wave dynamics, wall losses, thermal/structural loads, instrumentation and manufacturing/inspection.',
+  complexity:'Transient heating and loading, material response and boundary effects interact; a model is not a structural approval.',
+  failures:'Inspection non-conformance, unacceptable thermal/structural condition or a changed boundary invalidating prior assumptions.',
+  acceptance:'Relevant qualified structural/thermal review, traceable fabrication, accepted inspection and documented condition before reuse.',
+  map:[430,191],label:'Chamber'},
+ {id:'core',n:4,name:'Inner body',owner:1,gates:['G1','G2','G3'],tasks:['0-2','0-3','1-0','1-1','1-2','1-3','1-4','1-5'],risks:['validation','rework','discrepancy'],evidence:['periodic','spatial'],decision:'Dimensions, conditions, duration, materials and facility constraints.',
+  function:'Forms the inner boundary of the generic annular passage; it is stationary.',
+  couplings:'Annular flow, wall heating, mechanical support, inspection access and thermal management.',
+  complexity:'Flow boundaries, structural support and thermal response interact with the outer chamber.',
+  failures:'Non-conformance, unacceptable condition or geometry/interface changes requiring a revised analysis.',
+  acceptance:'Reviewed thermal/structural basis, accepted fabrication and assembly interfaces, documented inspection.',
+  map:[325,226],label:'Inner body'},
+ {id:'thermal',n:5,name:'Thermal-management interface',owner:1,gates:['G1','G2','G3'],tasks:['0-2','0-3','1-1','1-2','1-3','1-5','3-0','3-1'],risks:['validation','parts','rework'],evidence:['thermo','periodic','spatial'],decision:'Operating duration, propellants, thermal duty, materials and facility capability.',
+  function:'Represents the provision for managing and assessing hardware temperature; no cooling method or passages are specified.',
+  couplings:'Wall loads, material properties, operating duration, instrumentation and facility resources.',
+  complexity:'Local transient heat transfer and repeated-use condition may not follow a simple average load estimate.',
+  failures:'Unbounded thermal assumptions, unavailable components or unacceptable measured/inspected hardware condition.',
+  acceptance:'Qualified thermal-design review for the authorised duty, evidence of compatible interfaces and accepted condition criteria.',
+  map:[367,112],label:'Thermal'},
+ {id:'exhaust',n:6,name:'Exhaust interface',owner:1,gates:['G1','G2','G3'],tasks:['0-2','0-3','1-1','1-2','1-3','4-1','4-2','4-3'],risks:['validation','rework','discrepancy','no-wave'],evidence:['periodic','spatial'],decision:'Engine class, conditions, research objective and facility capability/approvals.',
+  function:'Represents the downstream boundary to the approved exhaust environment. No nozzle design is selected.',
+  couplings:'Chamber back pressure, reflected disturbances, thermal loads and facility requirements.',
+  complexity:'The downstream environment can influence the wave mode and invalidate a convenient numerical outlet assumption.',
+  failures:'Inappropriate boundary assumptions, non-conforming interfaces or commissioning discrepancies.',
+  acceptance:'Reviewed downstream boundary and facility compatibility, accepted hardware and resolved commissioning discrepancies.',
+  map:[266,165],label:'Exhaust'},
+ {id:'diagnostics',n:7,name:'Diagnostics interfaces',owner:3,gates:['G1','G2','G3','G5'],tasks:['0-2','0-4','0-5','3-0','3-1','3-2','3-3','3-4','3-5','3-6'],risks:['parts','rework','discrepancy','no-wave'],evidence:['reference','benchmark','periodic','spatial','experiment'],decision:'Evidence objectives, conditions, budget, expertise and instrument lead times.',
+  function:'Provides measurement interfaces for pressure, thermal and, where feasible, optical evidence. Symbol positions are not installation locations.',
+  couplings:'Predicted wave modes, measurement bandwidth, synchronization, uncertainty, thermal protection and structural integrity.',
+  complexity:'Instruments and interpretation must distinguish a rotating detonation from other unsteady combustion.',
+  failures:'Unsuitable response, synchronization/calibration errors, ambiguous evidence or late/unavailable instruments.',
+  acceptance:'Reviewed measurement/installation design, calibrated synchronized chain and an uncertainty-aware evidence assessment.',
+  map:[481,273],label:'Diagnostics'},
+ {id:'controls',n:8,name:'Controls / protective interface',owner:2,gates:['G1','G2','G3','G4'],tasks:['2-0','2-1','2-2','2-3','2-4','2-5','4-1','4-4'],risks:['parts','rework','discrepancy'],evidence:['periodic','spatial','experiment'],decision:'Facility capability, hazard review, configuration, operating scope and qualified expertise.',
+  function:'Represents remote control, monitoring and protective functions, without showing operating logic or procedures.',
+  couplings:'Supply hardware, measurements, facility safeguards, configuration control and independent authorisation.',
+  complexity:'Protective functions require reviewed system-level engineering; simulation cannot establish their adequacy.',
+  failures:'Unverified requirements, interface mismatch, unavailable components or changes invalidating prior acceptance.',
+  acceptance:'Qualified requirements review, recorded functional verification, accepted commissioning and independent approval where required.',
+  map:[240,250],label:'Controls'},
+ {id:'fixture',n:9,name:'Test-fixture / facility interface',owner:5,gates:['G1','G2','G3','G4'],tasks:['1-0','1-4','4-0','4-1','4-2','4-3','4-4','5-0','5-4'],risks:['parts','rework','discrepancy'],evidence:['periodic','spatial','experiment'],decision:'Facility capability and approvals, research objective, budget, expertise and lead times.',
+  function:'Connects the research hardware to its institutionally reviewed support and facility environment.',
+  couplings:'Mechanical support, access, instrumentation, exhaust environment, protective infrastructure and approvals.',
+  complexity:'An existing approved combustion facility is not established; facility development may control the entire schedule.',
+  failures:'Unresolved capability gaps, unacceptable interfaces, inspection findings or missing approvals.',
+  acceptance:'Qualified mechanical/facility review, accepted interfaces and documented facility readiness; G4 remains independent.',
+  map:[169,104],label:'Fixture'}
+];
+const evidenceData=[
+ {id:'thermo',name:'0D thermochemistry',sub:'Mixture thermodynamics / kinetics context',parts:['supply','head','thermal'],lanes:[0,1,2],output:'Thermochemical context and reaction-model assumptions; no chamber-wave prediction.',limits:'Depends on unresolved mixture and initial-state choices. Equilibrium does not predict a stable RDE.'},
+ {id:'reference',name:'CJ / ZND references',sub:'Ideal detonation / reaction structure',parts:['head','chamber','diagnostics'],lanes:[0,1,3],output:'Ideal propagation and reaction-structure references for modelling and measurement expectations.',limits:'Ideal references omit the full chamber, injection and multidimensional losses.'},
+ {id:'benchmark',name:'1D reactive-wave benchmark',sub:'Verify numerics / assess chemistry',parts:['head','chamber','diagnostics'],lanes:[0,1,3],output:'A traceable benchmark comparison and numerical/chemistry sensitivity record.',limits:'Passing a simplified benchmark is necessary evidence, not validation of a complete engine.'},
+ {id:'periodic',name:'2D periodic RDE model',sub:'Wave / refill coupling / sensitivity',parts:['supply','head','chamber','core','thermal','exhaust','diagnostics','controls','fixture'],lanes:[0,1,2,3,4,5],output:'Provisional load ranges, injector sensitivities, wave-mode expectations and sensor-placement questions.',limits:'Idealized mixing, radial structure and boundary conditions may prevent direct hardware transfer.'},
+ {id:'spatial',name:'Selective 3D',sub:'Only where the evidence gap warrants it',parts:['supply','head','chamber','core','thermal','exhaust','diagnostics','controls','fixture'],lanes:[0,1,2,3,4,5],output:'Targeted spatial/mixing and thermal-boundary assessments with explicit uncertainty.',limits:'Higher dimensionality is not automatic accuracy. Resolve the evidence gap before adding cost.'},
+ {id:'experiment',name:'Experimental return',sub:'Calibration / comparison / challenge',parts:['diagnostics','controls','fixture'],lanes:[0,1,2,3,4,5],output:'Measured conditions and uncertainty return to model calibration and independent comparison.',limits:'No experimental data is available here. Data used to tune a model is not independent validation data.'}
+];
+const riskParts={
+ validation:['head','chamber','core','thermal','exhaust'],
+ parts:['supply','chamber','thermal','diagnostics','controls','fixture'],
+ rework:['head','chamber','core','thermal','exhaust','diagnostics','controls','fixture'],
+ discrepancy:['supply','head','chamber','core','exhaust','diagnostics','controls','fixture'],
+ 'no-wave':['head','chamber','exhaust','diagnostics']
+};
+const riskTasks={
+ validation:['0-1','0-2','1-2','2-2'],
+ parts:['5-2','5-3','1-3','3-3','2-3','5-4'],
+ rework:['1-3','1-4','1-5','2-3','5-4'],
+ discrepancy:['0-4','1-4','2-4','3-4','4-4','5-4'],
+ 'no-wave':['0-5','0-6','3-5','3-6','5-6']
+};
+const revisions=Object.fromEntries(partsData.map(p=>[p.id,['A']]));
+const revisionEvents=[];
+let projectSelection=null;
+let inspectedPart='head';
+let selectedRisk='validation';
+let selectedEvidence='periodic';
+let stressEnabled=false;
+let engineView='cutaway';
+let activeTab='project';
+let operationController=null;
+function node(parent,tag,content,attrs={}){
+  const n=document.createElement(tag);
+  if(content!==null)n.textContent=content;
+  Object.entries(attrs).forEach(([k,v])=>n.setAttribute(k,v));
+  parent.appendChild(n);return n;
+}
+function partById(id){return partsData.find(p=>p.id===id);}
+function partsForTask(id){
+  const explicit=partsData.filter(p=>p.tasks.includes(id)).map(p=>p.id);
+  if(explicit.length)return explicit;
+  const [lane,column]=id.split('-').map(Number);
+  if(lane===0)return evidenceData[column===0?0:5].parts;
+  if(lane===4||lane===5)return partsData.map(p=>p.id);
+  return partsData.filter(p=>p.owner===lane).map(p=>p.id);
+}
+function linkedParts(){
+  if(!projectSelection)return [];
+  const {kind,id}=projectSelection;
+  if(kind==='part')return [id];
+  if(kind==='risk')return riskParts[id];
+  if(kind==='evidence')return evidenceData.find(e=>e.id===id).parts;
+  if(kind==='task')return partsForTask(id);
+  if(kind==='gate')return id==='G0'?partsData.map(p=>p.id):partsData.filter(p=>p.gates.includes(id)).map(p=>p.id);
+  return [];
+}
+function relatedTask(id){
+  if(!projectSelection)return false;
+  if(projectSelection.kind==='task')return projectSelection.id===id;
+  if(projectSelection.kind==='risk')return riskTasks[projectSelection.id].includes(id);
+  if(projectSelection.kind==='gate'){
+    const column=Number(id.split('-')[1]);
+    return {G0:[0],G1:[1],G2:[2,3],G3:[4],G4:[4,5],G5:[6]}[projectSelection.id].includes(column);
+  }
+  return linkedParts().some(pid=>partsForTask(id).includes(pid));
+}
+function relatedGate(id){
+  if(!projectSelection)return false;
+  if(projectSelection.kind==='gate')return id===projectSelection.id;
+  if(projectSelection.kind==='risk')return recoveryData.find(r=>r.id===projectSelection.id).gate===id;
+  if(projectSelection.kind==='task'){
+    const column=Number(projectSelection.id.split('-')[1]);
+    return [['G0'],['G1'],['G2'],['G2'],['G3','G4'],['G4'],['G5']][column].includes(id);
+  }
+  return linkedParts().some(pid=>partById(pid).gates.includes(id));
+}
+function relatedRisk(id){
+  if(!projectSelection)return false;
+  if(projectSelection.kind==='risk')return projectSelection.id===id;
+  return riskParts[id].some(pid=>linkedParts().includes(pid));
+}
+function selectionName(){
+  if(!projectSelection)return 'Select a part, task, gate, recovery loop or evidence stage.';
+  const {kind,id}=projectSelection;
+  if(kind==='part')return 'Part '+partById(id).n+' / '+partById(id).name;
+  if(kind==='risk')return recoveryData.find(r=>r.id===id).title;
+  if(kind==='gate')return id+' / '+gates.find(g=>g.id===id).name;
+  if(kind==='evidence')return evidenceData.find(e=>e.id===id).name;
+  const [r,c]=id.split('-').map(Number);return lanes[r].name+' / '+lanes[r].rows[c][0];
+}
+function syncSelection(){
+  const linked=linkedParts();
+  document.querySelectorAll('[data-part-id]').forEach(n=>{
+    const id=n.getAttribute('data-part-id');
+    n.classList.toggle('selected-part',linked.includes(id));
+    n.classList.toggle('stressed-part',stressEnabled&&riskParts[selectedRisk].includes(id));
+    if(n.getAttribute('role')==='button'||n.tagName==='BUTTON')n.setAttribute('aria-pressed',String(linked.includes(id)));
+  });
+  document.querySelectorAll('[data-task]').forEach(n=>n.classList.toggle('cross-linked',relatedTask(n.getAttribute('data-task'))));
+  document.querySelectorAll('[data-gate]').forEach(n=>n.classList.toggle('cross-linked',relatedGate(n.getAttribute('data-gate'))));
+  document.querySelectorAll('[data-recovery]').forEach(n=>n.classList.toggle('cross-linked',relatedRisk(n.getAttribute('data-recovery'))));
+  const summary=$('selection-summary');summary.replaceChildren();
+  node(summary,'strong',projectSelection?'Linked selection: ':'Cross-links: ');
+  node(summary,'span',selectionName());
+  if(projectSelection){
+    node(summary,'span',' / '+linked.length+' related component'+(linked.length===1?'':'s')+' highlighted across tabs.',{class:'selection-related'});
+  }
+  $('inspect-selection').disabled=!linked.length;
+  $('clear-selection').disabled=!projectSelection;
+}
+function updateInspector(id){
+  inspectedPart=id;renderPartCard($('analysis-card'),partById(id),false);
+}
+function selectPart(id,open=true){
+  projectSelection={kind:'part',id};updateInspector(id);syncSelection();
+  if(open)openPartDialog(id);
+}
+function selectProjectTask(r,c){
+  projectSelection={kind:'task',id:r+'-'+c};
+  const first=linkedParts()[0];if(first)updateInspector(first);syncSelection();
+}
+function selectProjectGate(id){
+  projectSelection={kind:'gate',id};
+  const first=linkedParts()[0];if(first)updateInspector(first);syncSelection();
+}
+function selectProjectRisk(id){
+  selectedRisk=id;projectSelection={kind:'risk',id};
+  updateInspector(riskParts[id][0]);renderRiskControls();syncSelection();
+}
+function selectEvidence(id){
+  selectedEvidence=id;projectSelection={kind:'evidence',id};
+  updateInspector(evidenceData.find(e=>e.id===id).parts[0]);
+  renderEvidenceDetails();drawFootprintMap();syncSelection();
+}
+function renderPartCard(container,p,dialog){
+  container.replaceChildren();
+  node(container,'span','ASSUMPTION / draft component assessment',{class:'tag'});
+  node(container,'h3',String(p.n).padStart(2,'0')+' / '+p.name,dialog?{id:'part-dialog-title'}:{});
+  const dl=node(container,'dl',null);
+  const fields={
+    Function:p.function,
+    Couplings:p.couplings,
+    'Why complex':p.complexity,
+    'Failure modes':p.failures,
+    Owner:lanes[p.owner].name+' (responsibility area; allocation not confirmed).',
+    'CFD evidence level':p.evidence.map(id=>evidenceData.find(e=>e.id===id).name).join('; ')+'.',
+    'Validated status':'NOT YET VALIDATED. No simulation or experimental results exist in this record.',
+    Gates:p.gates.join(' / ')+'. Relevant package reviews and downstream acceptance remain mandatory.',
+    'Blocking decisions':p.decision,
+    'Acceptance (draft)':p.acceptance,
+    'Design values':'TBD: set by reviewed design.',
+    'Demo revision trail':revisions[p.id].map(r=>'Rev '+r).join(' -> ')+' / illustrative only; no real change or approval recorded.'
+  };
+  for(const [label,value] of Object.entries(fields)){node(dl,'dt',label);node(dl,'dd',value);}
+  node(container,'p','Conceptual illustration. Not a design. CFD does not certify hardware safety. Hardware design and hazardous operation require qualified institutional review.',{class:'notice'});
+}
+function openPartDialog(id){
+  hideTip();renderPartCard($('part-dialog-card'),partById(id),true);
+  $('part-dialog').showModal();$('close-part').focus();
+}
+function buildPartLists(){
+  ['engine-parts','analysis-parts'].forEach(id=>{
+    const parent=$(id);parent.replaceChildren();
+    partsData.forEach(p=>{
+      const button=node(parent,'button',null,{class:'part-button','data-part-id':p.id,'aria-pressed':'false'});
+      node(button,'span',String(p.n),{class:'part-number'});
+      const title=node(button,'span',p.name);
+      node(title,'small',lanes[p.owner].short+' / '+p.gates.join(', ')+' / demo Rev '+revisions[p.id].join(' > '));
+      button.addEventListener('click',()=>selectPart(p.id));
+    });
+  });
+}
+function switchTab(id,focus=false){
+  activeTab=id;
+  document.querySelectorAll('[role="tab"]').forEach(tab=>{
+    const current=tab.id==='tab-'+id;
+    tab.setAttribute('aria-selected',String(current));tab.tabIndex=current?0:-1;
+    $(tab.getAttribute('aria-controls')).hidden=!current;
+  });
+  hideTip();
+  if(focus)$('tab-'+id).focus();
+  if(operationController)operationController.visibilityChanged();
+  syncSelection();
+}
+function setupTabs(){
+  const tabs=[...document.querySelectorAll('[role="tab"]')];
+  tabs.forEach((tab,i)=>{
+    tab.addEventListener('click',()=>switchTab(tab.id.slice(4)));
+    tab.addEventListener('keydown',event=>{
+      let next=i;
+      if(event.key==='ArrowRight')next=(i+1)%tabs.length;
+      else if(event.key==='ArrowLeft')next=(i+tabs.length-1)%tabs.length;
+      else if(event.key==='Home')next=0;
+      else if(event.key==='End')next=tabs.length-1;
+      else return;
+      event.preventDefault();switchTab(tabs[next].id.slice(4),true);
+    });
+  });
+}
+function enginePart(root,id,draw){
+  const p=partById(id);
+  const g=el('g',{'data-part-id':id,role:'button',tabindex:0,'aria-label':p.n+'. '+p.name+'. '+lanes[p.owner].name+'. Gates '+p.gates.join(', ')+'. Open part analysis.'},root);
+  draw(g);
+  bindAction(g,()=>selectPart(id),p.name+' / '+lanes[p.owner].name+' / '+p.gates.join(', '));
+  return g;
+}
+function drawEngine(id,view='cutaway'){
+  const root=$(id);root.replaceChildren();
+  const rootTitle=el('title',{},root);rootTitle.textContent='Conceptual '+view+' of an annular RDE research demonstrator, head end at left and exhaust at right.';
+  const description=el('desc',{},root);description.textContent='Nine selectable component interfaces. No design dimensions or operating values are represented. Hardware remains stationary; see How it works for the travelling-wave animation.';
+  const exploded=view==='exploded';
+  const offsets=exploded?{supply:[-8,0],head:[-25,0],chamber:[15,-25],core:[27,30],thermal:[15,-43],exhaust:[52,0],diagnostics:[35,-24],controls:[0,17],fixture:[20,25]}:{};
+  const groupFor=(pid,draw)=>{
+    const offset=offsets[pid]||[0,0];
+    return enginePart(root,pid,parent=>{
+      const geometry=el('g',{transform:`translate(${offset[0]} ${offset[1]})`},parent);
+      draw(geometry);
+    });
+  };
+  const groups={};
+  text(root,25,29,exploded?'EXPLODED RELATIONSHIPS / NOT ASSEMBLY INSTRUCTIONS':'TRANSPARENT CUTAWAY / STATIONARY HARDWARE','drawing-label');
+  text(root,25,49,'Schematic / not to scale / all design values TBD: set by reviewed design','drawing-small');
+  path(root,'M 197 226 L 737 183','',{fill:'none',stroke:'var(--line)','stroke-dasharray':'6 6'});
+  groups.fixture=groupFor('fixture',g=>{
+    path(g,'M 363 299 V 345 H 620 V 280 M 337 345 H 646','part-outline focus-target');
+    el('rect',{x:365,y:338,width:254,height:13,rx:4,class:'part-shape'},g);
+  });
+  groups.chamber=groupFor('chamber',g=>{
+    path(g,'M 262 142 L 640 113 A 55 82 0 0 1 640 277 L 262 306 A 55 82 0 0 0 262 142 Z','shell focus-target');
+    el('ellipse',{cx:640,cy:195,rx:55,ry:82,class:'part-outline'},g);
+    path(g,'M 262 142 L 640 113 M 262 306 L 640 277','part-outline');
+  });
+  groups.core=groupFor('core',g=>{
+    path(g,'M 276 175 L 638 146 A 33 49 0 0 1 638 244 L 276 273 A 33 49 0 0 0 276 175 Z','part-shape focus-target');
+    el('ellipse',{cx:276,cy:224,rx:33,ry:49,class:'part-shape'},g);
+    path(g,'M 304 223 L 648 196','',{stroke:'var(--line)','stroke-width':1,fill:'none'});
+  });
+  groups.head=groupFor('head',g=>{
+    const outer='M 262 142 A 55 82 0 1 1 262 306 A 55 82 0 1 1 262 142 Z';
+    const inner='M 262 175 A 33 49 0 1 1 262 273 A 33 49 0 1 1 262 175 Z';
+    path(g,outer+' '+inner,'part-shape focus-target',{'fill-rule':'evenodd',style:'fill:var(--cool-soft)'});
+    el('ellipse',{cx:262,cy:224,rx:55,ry:82,class:'part-outline'},g);
+  });
+  groups.thermal=groupFor('thermal',g=>{
+    path(g,'M 319 132 L 624 109 M 321 313 L 624 289 M 319 132 l 0 -8 M 624 109 l 0 -8 M 321 313 l 0 8 M 624 289 l 0 8','part-outline focus-target',{'stroke-dasharray':'7 4',style:'stroke:var(--cool)'});
+    path(g,'M 380 125 L 580 110','',{stroke:'var(--cool)','stroke-width':10,opacity:.13});
+  });
+  groups.exhaust=groupFor('exhaust',g=>{
+    path(g,'M 679 179 H 742 M 727 171 L 742 179 L 727 187 M 680 211 H 742 M 727 203 L 742 211 L 727 219','part-outline focus-target');
+    el('ellipse',{cx:665,cy:193,rx:55,ry:82,class:'part-outline','stroke-dasharray':'4 3'},g);
+  });
+  groups.supply=groupFor('supply',g=>{
+    el('rect',{x:88,y:186,width:86,height:74,rx:8,class:'part-shape focus-target'},g);
+    text(g,131,214,'Supply','drawing-label',{'text-anchor':'middle'});
+    text(g,131,233,'boundary','drawing-small',{'text-anchor':'middle'});
+    path(g,'M 174 224 H 205 M 194 217 L 205 224 L 194 231','part-outline');
+  });
+  groups.diagnostics=groupFor('diagnostics',g=>{
+    [[386,154],[550,142]].forEach(([x,y])=>{
+      el('rect',{x:x-7,y:y-7,width:14,height:14,rx:3,class:'part-shape focus-target'},g);
+      path(g,`M ${x} ${y-7} V ${y-30}`,'part-outline',{'stroke-dasharray':'3 3'});
+    });
+    path(g,'M 386 124 L 550 112','part-outline',{'stroke-dasharray':'3 4'});
+  });
+  groups.controls=groupFor('controls',g=>{
+    el('rect',{x:102,y:312,width:126,height:54,rx:7,class:'part-shape focus-target'},g);
+    text(g,165,333,'Control boundary','small',{'text-anchor':'middle'});
+    text(g,165,350,'remote / protective','drawing-small',{'text-anchor':'middle'});
+    path(g,'M 165 312 V 286 H 131 V 260','part-outline',{'stroke-dasharray':'3 4'});
+  });
+  const callouts={
+    supply:[37,131,131,186],head:[190,95,242,144],chamber:[401,77,466,126],
+    core:[477,387,481,250],thermal:[577,69,579,110],exhaust:[799,150,719,190],
+    diagnostics:[756,75,550,112],controls:[35,384,103,340],fixture:[753,385,618,345]
+  };
+  partsData.forEach(p=>{
+    const [x,y,tx,ty]=callouts[p.id],g=groups[p.id];
+    const offset=offsets[p.id]||[0,0];
+    path(g,`M ${x+11} ${y+8} L ${tx+offset[0]} ${ty+offset[1]}`,'callout-leader');
+    el('circle',{cx:x,cy:y,r:12,class:'callout-badge focus-target'},g);
+    text(g,x,y+4,String(p.n),'small',{'text-anchor':'middle','font-weight':750});
+    text(g,x+18,y+3,p.label,'drawing-label');
+    text(g,x+18,y+19,lanes[p.owner].short+' / '+p.gates.join(','),'drawing-small');
+    if(id==='risk-engine'||revisions[p.id].length>1){
+      const stamps=revisions[p.id];
+      text(g,x+18,y+33,'Demo Rev '+(stamps.length>3?'... ':'')+stamps.slice(-3).join(' > '),'revision-stamp');
+    }
+  });
+  text(root,254,434,'HEAD END','drawing-small');
+  path(root,'M 346 429 H 634 M 625 424 L 634 429 L 625 434','',{fill:'none',stroke:'var(--muted)','stroke-width':1.5});
+  text(root,651,434,'EXHAUST','drawing-small');
+  text(root,25,460,'Numbered callouts are selectable. Interfaces and component arrangements are illustrative assumptions.','drawing-small');
+}
+function drawAllEngines(){
+  drawEngine('engine-dissection',engineView);
+  drawEngine('risk-engine','cutaway');
+  drawEngine('evidence-engine','cutaway');
+}
+function drawCouplingMap(){
+  const root=$('coupling-map');root.replaceChildren();
+  text(root,26,26,'RELATIVE COUPLING / UNCERTAINTY','section');
+  el('rect',{x:83,y:52,width:505,height:303,fill:'var(--soft)',stroke:'var(--line)'},root);
+  path(root,'M 335 52 V 355 M 83 203 H 588','',{stroke:'var(--line)','stroke-dasharray':'5 4',fill:'none'});
+  text(root,42,215,'CURRENT UNCERTAINTY','tiny muted',{transform:'rotate(-90 42 215)','text-anchor':'middle'});
+  text(root,87,45,'Relatively higher','tiny muted');
+  text(root,87,376,'Relatively lower','tiny muted');
+  text(root,580,376,'Relatively higher','tiny muted',{'text-anchor':'end'});
+  text(root,335,401,'COUPLING COMPLEXITY ->','small muted',{'text-anchor':'middle'});
+  partsData.forEach(p=>{
+    const [x,y]=p.map;
+    const g=el('g',{role:'button',tabindex:0,class:'coupling-node','data-part-id':p.id,'aria-label':p.name+', provisional relative placement. Open analysis.'},root);
+    const width=Math.max(80,p.label.length*6.5+32);
+    el('rect',{x:x-25,y:y-13,width,height:29,rx:6,class:'focus-target'},g);
+    text(g,x-17,y+6,p.n+' / '+p.label,'small');
+    bindAction(g,()=>selectPart(p.id),p.name+': relative, assumed placement; not a numerical risk score.');
+  });
+  text(root,26,430,'ASSUMPTION / dashed placements / no quantitative scores','tiny muted');
+}
+function renderRiskControls(){
+  const buttons=$('risk-buttons');
+  if(!buttons.children.length)recoveryData.forEach(r=>{
+    const b=node(buttons,'button',null,{class:'risk-button','data-risk-id':r.id,'aria-pressed':'false'});
+    node(b,'b',r.title);node(b,'small','Return to '+r.gate+' / review before re-entry');
+    b.addEventListener('click',()=>{selectProjectRisk(r.id);if(stressEnabled)applyStressToTimeline();});
+  });
+  buttons.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.riskId===selectedRisk)));
+  const r=recoveryData.find(item=>item.id===selectedRisk);
+  const detail=$('risk-detail');detail.replaceChildren();
+  node(detail,'span','ASSUMPTION / scenario only',{class:'tag'});
+  node(detail,'h3',r.title);
+  node(detail,'p',r.lines.join('. ')+'.');
+  node(detail,'p','Affected: '+riskParts[selectedRisk].map(id=>partById(id).label).join(', ')+'.');
+  node(detail,'p','Re-entry: '+r.gate+'. '+r.dependency);
+  const action=node(detail,'button','Record simulated revision cycle',{id:'apply-recovery'});
+  action.disabled=!stressEnabled;action.addEventListener('click',recordRecovery);
+  node(detail,'p','Adds demo revision stamps only. Evidence remains unvalidated; design review and independent authorisation are never granted by this control.');
+  const gateRow=$('risk-gates');gateRow.replaceChildren();
+  gates.forEach(g=>{
+    const b=node(gateRow,'button',null,{'data-gate':g.id,class:g.id===r.gate?'return-gate':''});
+    node(b,'b',g.id);node(b,'span',g.id==='G4'?'Independent':g.name);
+    b.addEventListener('click',()=>gateOpen(g));
+  });
+  $('risk-route').textContent='RETURN -> '+r.gate+'. '+r.note+' Any affected later acceptance/authorisation must be repeated. Gate positions are planning assumptions.';
+  const history=$('revision-history');history.replaceChildren();
+  if(!revisionEvents.length)node(history,'p','Demo baseline: Rev A on every part. No actual revisions or approvals recorded.');
+  else revisionEvents.slice().reverse().forEach(event=>node(history,'p',event));
+}
+function applyStressToTimeline(){
+  if(stressEnabled&&Object.hasOwn(scenarios,selectedRisk))activeScenario=selectedRisk;
+  else activeScenario='baseline';
+  $('scenario').value=activeScenario;
+  render();
+}
+function recordRecovery(){
+  if(!stressEnabled)return;
+  const risk=recoveryData.find(r=>r.id===selectedRisk);
+  const stamps=riskParts[selectedRisk].map(id=>{
+    const index=revisions[id].length;
+    const stamp=index<26?String.fromCharCode(65+index):'A'+(index-25);
+    revisions[id].push(stamp);
+    return partById(id).label+' Rev '+stamp;
+  });
+  revisionEvents.push('DEMO / '+risk.title+' -> '+risk.gate+' review required: '+stamps.join('; ')+'.');
+  drawAllEngines();buildPartLists();updateInspector(inspectedPart);renderRiskControls();syncSelection();
+  $('apply-recovery').focus();
+}
+function renderEvidenceDetails(){
+  const parent=$('trail-buttons');
+  if(!parent.children.length)evidenceData.forEach(e=>{
+    const b=node(parent,'button',null,{class:'trail-button','data-evidence-id':e.id,'aria-pressed':'false'});
+    node(b,'i',null,{class:'trail-status','aria-hidden':'true'});
+    node(b,'b',e.name);node(b,'small',e.sub);node(b,'small','NOT YET VALIDATED');
+    b.addEventListener('click',()=>selectEvidence(e.id));
+  });
+  parent.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.evidenceId===selectedEvidence)));
+  const e=evidenceData.find(item=>item.id===selectedEvidence),note=$('trail-note');note.replaceChildren();
+  node(note,'span','ASSUMPTION / intended evidence use',{class:'tag'});
+  node(note,'h3',e.name);node(note,'p',e.output);node(note,'p',e.limits);
+  node(note,'p','Status: no validated result. The graphic contains no numerical or contour CFD output.');
+}
+function drawFootprintMap(){
+  const root=$('footprint-map');root.replaceChildren();
+  const defs=el('defs',{},root);
+  const marker=el('marker',{id:'footprint-arrow',viewBox:'0 0 10 10',refX:8,refY:5,markerWidth:6,markerHeight:6,orient:'auto'},defs);
+  path(marker,'M 0 0 L 10 5 L 0 10 z','',{fill:'var(--cool)'});
+  text(root,22,26,'CFD EVIDENCE -> WORKSTREAMS -> HARDWARE','section');
+  text(root,22,45,'Hollow = not validated. Selection traces intended use, not achieved maturity.','small muted');
+  const e=evidenceData.find(item=>item.id===selectedEvidence);
+  path(root,'M 82 87 H 893','',{stroke:'var(--cool)','stroke-dasharray':'3 4','stroke-width':1.5,fill:'none'});
+  evidenceData.forEach((stage,i)=>{
+    const x=28+i*156;
+    const g=el('g',{role:'button',tabindex:0,'data-evidence-node':stage.id,'aria-label':stage.name+', not yet validated. Trace evidence.'},root);
+    el('rect',{x,y:63,width:143,height:48,rx:6,fill:'var(--surface)',stroke:'var(--cool)','stroke-dasharray':stage.id===selectedEvidence?'none':'4 3','stroke-width':stage.id===selectedEvidence?2.5:1,class:'focus-target'},g);
+    el('circle',{cx:x+12,cy:78,r:4,fill:'none',stroke:'var(--cool)'},g);
+    text(g,x+23,81,['0D','CJ / ZND','1D benchmark','2D periodic','Selective 3D','Data return'][i],'small cool-text');
+    text(g,x+10,99,'Not yet validated','tiny muted');
+    bindAction(g,()=>{selectEvidence(stage.id);$('footprint-map').querySelector(`[data-evidence-node="${stage.id}"]`).focus();});
+  });
+  const sourceX=28+evidenceData.indexOf(e)*156+72;
+  e.lanes.forEach(lane=>{
+    const x=28+lane*156;
+    path(root,`M ${sourceX} 111 V 135 H ${x+71} V 156`,'',{stroke:'var(--cool)','stroke-width':1.2,'stroke-dasharray':'4 3',fill:'none','marker-end':'url(#footprint-arrow)'});
+  });
+  lanes.forEach((lane,i)=>{
+    const x=28+i*156;
+    el('rect',{x,y:159,width:143,height:41,rx:5,fill:'var(--soft)',stroke:e.lanes.includes(i)?'var(--cool)':'var(--line)'},root);
+    text(root,x+10,177,lane.short,'small');
+    text(root,x+10,192,e.lanes.includes(i)?'Evidence input':'Context / interfaces','tiny muted');
+  });
+  text(root,28,230,e.id==='periodic'?'Load ranges / injector sensitivity / wave modes / sensor-placement questions':e.sub,'small cool-text');
+  partsData.forEach((p,i)=>{
+    const x=33+i*103;
+    const g=el('g',{role:'button',tabindex:0,'data-part-id':p.id,class:'coupling-node','aria-label':p.name+', open component evidence analysis'},root);
+    if(e.parts.includes(p.id)){
+      path(root,`M ${28+p.owner*156+71} 201 V 244 H ${x+42} V 265`,'',{stroke:'var(--cool)','stroke-width':1,'stroke-dasharray':'3 4',opacity:.55,fill:'none','marker-end':'url(#footprint-arrow)'});
+    }
+    el('rect',{x,y:269,width:95,height:46,rx:5,class:'focus-target'},g);
+    text(g,x+7,286,p.n+' / '+p.label,'tiny');
+    text(g,x+7,302,'Hardware link','tiny muted');
+    bindAction(g,()=>selectPart(p.id));
+  });
+  path(root,'M 934 316 V 350 H 20 V 54 H 863','',{stroke:'var(--cool)','stroke-width':1.5,'stroke-dasharray':'5 4',fill:'none','marker-end':'url(#footprint-arrow)'});
+  text(root,90,344,'FUTURE EXPERIMENTAL DATA -> calibration / comparison / model challenge','small cool-text');
+  text(root,90,369,'Tuning data and independent validation data are not interchangeable. No evidence status changes automatically.','tiny muted');
+}
+function initOperation(){
+  const root=$('operation-svg');
+  root.setAttribute('viewBox','0 0 1260 490');
+  const tau=Math.PI*2, cx=230,cy=220,outer=121,inner=73;
+  const strip={x:520,y:105,w:670,h:230},bottom=strip.y+strip.h;
+  const reduced=matchMedia('(prefers-reduced-motion: reduce)');
+  let phase=.12,running=!reduced.matches,speed=1,last=null,frame=null;
+  const defs=el('defs',{},root);
+  [['op-cool','var(--cool)'],['op-warm','var(--warm)'],['op-grey','var(--muted)']].forEach(([id,color])=>{
+    const m=el('marker',{id,viewBox:'0 0 10 10',refX:8,refY:5,markerWidth:6,markerHeight:6,orient:'auto'},defs);
+    path(m,'M 0 0 L 10 5 L 0 10 z','',{fill:color});
+  });
+  const clip=el('clipPath',{id:'strip-clip'},defs);
+  el('rect',{x:strip.x,y:strip.y,width:strip.w,height:strip.h},clip);
+  const titleNode=el('title',{id:'operation-title'},root);
+  titleNode.textContent='Rotating detonation: synchronized annular view and unrolled periodic strip.';
+  const description=el('desc',{id:'operation-description'},root);
+  description.textContent='One schematic detonation wave circles stationary hardware. Fresh mixture replenishes near the head end; products leave axially. The unrolled strip has periodic left and right edges. Motion, geometry and flow markers are illustrative, not simulation or measurements. Use Pause, Step frame or Scrub cycle.';
+  text(root,33,29,'ANNULAR VIEW / LOOKING DOWN THE AXIS','op-label');
+  text(root,520,29,'UNROLLED CHAMBER / SAME WAVE, SAME CYCLE','op-label');
+  const modeLabel=text(root,33,51,'Idealised single-wave organization','op-small');
+  text(root,520,51,'Axial distance increases upward; left and right edges reconnect.','op-small');
+  const point=(r,a)=>[cx+r*Math.cos(a),cy+r*Math.sin(a)];
+  function arc(r,a,b){
+    const points=[];
+    for(let i=0;i<=20;i++)points.push(point(r,a+(b-a)*i/20));
+    return 'M '+points.map(p=>p.join(',')).join(' L ');
+  }
+  function sector(a,b){
+    const points=[];
+    for(let i=0;i<=8;i++)points.push(point(outer,a+(b-a)*i/8));
+    for(let i=8;i>=0;i--)points.push(point(inner,a+(b-a)*i/8));
+    return 'M '+points.map(p=>p.join(',')).join(' L ')+' Z';
+  }
+  const sectors=[];
+  for(let i=0;i<72;i++){
+    const a=i*tau/72-Math.PI/2;
+    sectors.push(path(root,sector(a,a+tau/72+.002),'',{fill:'var(--cool-soft)'}));
+  }
+  el('circle',{cx,cy,r:outer,fill:'none',stroke:'var(--muted)','stroke-width':2},root);
+  el('circle',{cx,cy,r:inner,fill:'var(--surface)',stroke:'var(--muted)','stroke-width':2},root);
+  text(root,cx,cy-5,'STATIONARY','op-small',{'text-anchor':'middle'});
+  text(root,cx,cy+14,'INNER BODY','op-small',{'text-anchor':'middle'});
+  path(root,arc(143,-1.16,.14),'',{stroke:'var(--warm)','stroke-width':2.5,fill:'none','marker-end':'url(#op-warm)'});
+  text(root,375,193,'Wave','op-small');
+  text(root,375,211,'travels','op-small');
+  const ringTrail=path(root,'','',{fill:'var(--warm-soft)',opacity:.95});
+  const ringWave=path(root,'','',{stroke:'var(--warm)','stroke-width':6,'stroke-linecap':'round',id:'ring-wave'});
+  el('circle',{cx,cy:cy-outer-3,r:6,fill:'var(--surface)',stroke:'var(--cool)','stroke-width':2},root);
+  path(root,`M ${cx} ${cy-outer-9} V 75 H 94`,'',{stroke:'var(--cool)','stroke-dasharray':'3 3',fill:'none'});
+  text(root,34,78,'Fixed reference point','op-small');
+  const fixedStatus=text(root,34,381,'','op-small');
+  text(root,34,400,'Colours indicate conceptual regions, not CFD fields.','op-small');
+  el('rect',{x:strip.x,y:strip.y,width:strip.w,height:strip.h,rx:0,fill:'var(--soft)',stroke:'var(--line)'},root);
+  const stripGroup=el('g',{'clip-path':'url(#strip-clip)'},root);
+  const freshColumns=[];
+  for(let i=0;i<100;i++)freshColumns.push(el('rect',{x:strip.x+i*strip.w/100,y:bottom-80,width:strip.w/100+.3,height:80,fill:'var(--cool-soft)'},stripGroup));
+  const flowMarkers=[];
+  for(let i=0;i<18;i++)flowMarkers.push(el('path',{stroke:'var(--muted)','stroke-width':2,opacity:.45,'stroke-linecap':'round',fill:'none'},stripGroup));
+  const stripWave=path(stripGroup,'','',{stroke:'var(--warm)','stroke-width':5,id:'strip-wave'});
+  const oblique=path(stripGroup,'','',{stroke:'var(--warm)','stroke-width':1.5,'stroke-dasharray':'5 3',opacity:.65});
+  const waveLabel=text(root,strip.x+20,bottom-111,'Travelling front','op-small');
+  for(let i=0;i<7;i++){
+    const x=strip.x+45+i*95;
+    path(root,`M ${x} 395 V 350`,'',{stroke:'var(--cool)','stroke-width':1.4,fill:'none','marker-end':'url(#op-cool)'});
+  }
+  text(root,strip.x+strip.w/2,420,'HEAD END / FRESH MIXTURE ENTERS','op-small',{'text-anchor':'middle'});
+  text(root,strip.x+strip.w/2,130,'PRODUCTS EXPAND AND FLOW DOWNSTREAM','op-small',{'text-anchor':'middle'});
+  [strip.x,strip.x+strip.w].forEach(x=>path(root,`M ${x} ${strip.y} V ${bottom}`,'',{stroke:'var(--cool)','stroke-width':2,'stroke-dasharray':'5 4',fill:'none'}));
+  path(root,`M ${strip.x} 101 V 82 H ${strip.x+strip.w} V 101`,'',{stroke:'var(--cool)','stroke-dasharray':'4 4',fill:'none'});
+  text(root,strip.x+strip.w/2,76,'PERIODIC / RIGHT EDGE REJOINS LEFT EDGE','op-small',{'text-anchor':'middle'});
+  path(root,'M 486 292 V 163','',{stroke:'var(--muted)','stroke-width':1.4,fill:'none','marker-end':'url(#op-grey)'});
+  text(root,474,230,'Axial flow','op-small',{transform:'rotate(-90 474 230)','text-anchor':'middle'});
+  const real=el('g',{class:'nonideal',display:'none','aria-hidden':'true'},root);
+  const realLabels=[
+    [28,440,214,'Mixing / refill non-uniformity'],
+    [254,440,204,'Wall losses / thermal loading'],
+    [524,440,216,'Injector / supply coupling'],
+    [752,440,218,'Wave-mode changes / losses'],
+    [982,440,236,'Outlet / reflected disturbances']
+  ];
+  realLabels.forEach(([x,y,w,label],i)=>{
+    el('rect',{x,y,width:w,height:30,rx:5},real);
+    text(real,x+9,y+20,(i+1)+' / '+label,'');
+  });
+  [[710,315],[343,260],[605,348],[992,230],[1155,145]].forEach(([x,y],i)=>{
+    el('circle',{cx:x,cy:y,r:12,fill:'var(--surface)',stroke:'var(--warm)','stroke-dasharray':'3 2','stroke-width':2},real);
+    text(real,x,y+4,String(i+1),'',{'text-anchor':'middle','font-weight':800});
+  });
+  const stages=[...$('operation-stages').children];
+  function draw(){
+    const angle=phase*tau-Math.PI/2;
+    sectors.forEach((s,i)=>{
+      const age=(phase-i/72+1)%1;
+      s.setAttribute('fill',age<.22?'var(--soft)':'var(--cool-soft)');
+    });
+    ringTrail.setAttribute('d',sector(angle-.16,angle));
+    const a=point(inner,angle),b=point(outer,angle);
+    ringWave.setAttribute('d',`M ${a.join(',')} L ${b.join(',')}`);
+    ringWave.dataset.phase=phase.toFixed(6);
+    freshColumns.forEach((column,i)=>{
+      const age=(phase-i/100+1)%1;
+      const height=94*Math.max(0,(age-.18)/.82);
+      column.setAttribute('y',bottom-height);column.setAttribute('height',height);
+    });
+    const x=strip.x+phase*strip.w;
+    stripWave.setAttribute('d',`M ${x} ${bottom} V ${bottom-94}`);
+    stripWave.dataset.phase=phase.toFixed(6);
+    oblique.setAttribute('d',`M ${x} ${bottom-94} L ${x+126} ${strip.y}`);
+    waveLabel.setAttribute('x',Math.min(strip.x+strip.w-121,Math.max(strip.x+9,x+10)));
+    flowMarkers.forEach((marker,i)=>{
+      const px=strip.x+30+(i%9)*(strip.w-60)/8;
+      const progress=(phase*1.65+Math.floor(i/9)*.5+(i%3)*.14)%1;
+      const py=bottom-99-progress*122;
+      marker.setAttribute('d',`M ${px} ${py+10} V ${py}`);
+    });
+    const stage=phase<.045?0:phase<.22?1:phase<.82?2:3;
+    stages.forEach((s,i)=>{s.classList.toggle('active',i===stage);if(i===stage)s.setAttribute('aria-current','step');else s.removeAttribute('aria-current');});
+    fixedStatus.textContent='At fixed reference: '+['wave passage','products expand','fresh mixture replenishes','awaiting the returning wave'][stage]+'.';
+    $('op-phase').value=String(Math.round(phase*100));
+  }
+  function setStatus(){
+    $('op-play').textContent=running?'Pause':'Play';
+    $('op-play').setAttribute('aria-label',running?'Pause animation':'Play animation');
+    $('op-state').textContent=(running?'Playing':'Paused')+' / illustrative slow motion'+(reduced.matches?' / reduced-motion preference':'');
+  }
+  function animate(now){
+    frame=null;
+    if(!running||activeTab!=='operation'||document.hidden){last=null;return;}
+    if(last!==null)phase=(phase+Math.min((now-last)/1000,.1)*speed/8)%1;
+    last=now;draw();frame=requestAnimationFrame(animate);
+  }
+  function visibilityChanged(){
+    if(frame!==null){cancelAnimationFrame(frame);frame=null;}
+    last=null;
+    if(running&&activeTab==='operation'&&!document.hidden)frame=requestAnimationFrame(animate);
+  }
+  function pause(){running=false;setStatus();visibilityChanged();}
+  $('op-play').addEventListener('click',()=>{running=!running;setStatus();visibilityChanged();});
+  $('op-step').addEventListener('click',()=>{pause();phase=(phase+.025)%1;draw();});
+  $('op-speed').addEventListener('change',()=>{speed=Number($('op-speed').value);});
+  $('op-phase').addEventListener('input',()=>{pause();phase=(Number($('op-phase').value)/100)%1;draw();});
+  $('op-real').addEventListener('change',()=>{
+    const enabled=$('op-real').checked;
+    real.setAttribute('display',enabled?'inline':'none');real.setAttribute('aria-hidden',String(!enabled));
+    modeLabel.textContent=enabled?'Same schematic + labelled real-world effects':'Idealised single-wave organization';
+  });
+  reduced.addEventListener('change',()=>{if(reduced.matches)pause();setStatus();});
+  document.addEventListener('visibilitychange',visibilityChanged);
+  draw();setStatus();
+  return {visibilityChanged};
+}
+function initIntegratedApp(){
+  setupTabs();
+  buildPartLists();drawAllEngines();drawCouplingMap();updateInspector(inspectedPart);
+  renderRiskControls();renderEvidenceDetails();drawFootprintMap();
+  operationController=initOperation();
+  ['cutaway','exploded'].forEach(view=>$('view-'+view).addEventListener('click',()=>{
+    engineView=view;drawEngine('engine-dissection',view);
+    ['cutaway','exploded'].forEach(v=>$('view-'+v).setAttribute('aria-pressed',String(v===view)));
+    syncSelection();
+  }));
+  $('clear-selection').addEventListener('click',()=>{projectSelection=null;syncSelection();});
+  $('inspect-selection').addEventListener('click',()=>{
+    const id=linkedParts()[0];if(id)openPartDialog(id);
+  });
+  $('close-part').addEventListener('click',()=>$('part-dialog').close());
+  $('part-dialog').addEventListener('close',hideTip);
+  $('part-dialog').addEventListener('click',event=>{
+    if(event.target!==$('part-dialog'))return;
+    const rect=$('part-dialog').getBoundingClientRect();
+    if(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom)$('part-dialog').close();
+  });
+  $('op-diagnostics').addEventListener('click',()=>selectPart('diagnostics'));
+  $('stress-enabled').addEventListener('change',()=>{
+    stressEnabled=$('stress-enabled').checked;
+    if(stressEnabled)selectProjectRisk(selectedRisk);
+    renderRiskControls();applyStressToTimeline();syncSelection();
+  });
+  $('reset-revisions').addEventListener('click',()=>{
+    partsData.forEach(p=>{revisions[p.id]=['A'];});revisionEvents.length=0;
+    drawAllEngines();buildPartLists();updateInspector(inspectedPart);renderRiskControls();syncSelection();
+  });
+  $('risk-timeline').addEventListener('click',()=>{projectSelection={kind:'risk',id:selectedRisk};switchTab('project',true);});
+  buildRegister();render();
+  const initial=location.hash.slice(1);
+  switchTab(['project','engine','operation','analysis','failure','evidence'].includes(initial)?initial:'project');
+}
+initIntegratedApp();
+</script>
+</body>
+</html>
