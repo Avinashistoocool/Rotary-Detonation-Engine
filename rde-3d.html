@@ -36,6 +36,8 @@
     <div class="cycle-key"><span><i class="key"></i>Fresh reactants</span><span><i class="key front"></i>Front</span><span><i class="key product"></i>Expanding products</span><span><i class="key recovery"></i>Recovery / refill</span></div>
     <div class="metric"><span>Sector at reference mark</span><strong id="sector-state">Initial fill</strong></div>
     <div class="metric"><span>Fresh-layer recovery</span><strong id="fresh-readout">0.00</strong></div>
+    <div class="metric"><span>Fill ahead of fronts</span><strong id="fill-ahead">0.00</strong></div>
+    <div class="metric"><span>Wave spacing / fill (L/h)</span><strong id="lh-readout">-</strong></div>
     <p class="panel-note">Height, pulses and flow markers are dimensionless model states, not geometry specifications or field solutions.</p>
   </aside>
   <aside class="telemetry-panel right" aria-labelledby="trace-heading">
@@ -104,7 +106,7 @@ document.getElementById('retry').addEventListener('click',()=>location.reload())
   const $=id=>document.getElementById(id);
   if(!window.pc)return;
   const TAU=Math.PI*2,DEG=180/Math.PI,SECTORS=72;
-  const drawing={axialSpan:4.45,freshMin:.028,freshSpan:1.10,frontMin:.82,frontSpan:.24,shockAxial:2.91,shockSweep:1.25};
+  const drawing={axialSpan:4.45,freshMin:.028,freshSpan:1.10,shockAxial:2.91,shockSweep:1.25};
   const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
   const wrap=v=>((v%TAU)+TAU)%TAU;
   const distance=(a,b)=>Math.abs(Math.atan2(Math.sin(a-b),Math.cos(a-b)));
@@ -119,28 +121,59 @@ document.getElementById('retry').addEventListener('click',()=>location.reload())
     {id:'initiation',name:'Initiation port',anchor:[-1.20,-1.15,-1.72],separation:-.48,focus:6.8},
     {id:'instruments',name:'Instrument ports',anchor:[0,1.72,-.65],separation:.55,focus:7.4}
   ];
+  // Normalized refill model. The injector feeds a fixed mass flow, so the layer grows at a constant
+  // rate after a fixed injector-recovery delay; it does not relax toward the same target for every
+  // wave count. With n waves each sector is refilled for 1/(n*fRev), so the layer ahead of each wave
+  // is ~1/n as tall and the wave-spacing / fill-height ratio L/h stays roughly constant (~7-9), as
+  // reported for stable operation. Units are dimensionless; nothing here is a design value.
+  const model={
+    revRate:.64,          // revolutions per model-time unit for one wave on a full layer
+    injectorDelay:.156,   // injector recovery time after a front passes (model time, independent of wave count)
+    fillRate:.711,        // normalized layer height added per model-time unit (fixed injector flow)
+    speedDeficit:.08,     // fronts slow slightly on thinner layers -> rev rate drops with more waves
+    meanRadius:1.30,      // mid-annulus radius used for L = 2*pi*r/n in drawing units
+    probeSectors:[0,18,36,54],
+    viewCentre:0,viewHalfWidth:.55   // luminosity proxy: one optical port viewing a fixed arc
+  };
+  const layerUnits=h=>drawing.freshMin+h*drawing.freshSpan;
   class WaveModel{
     constructor(){this.mode='one';this.nonideal=false;this.targetSpeed=.45;this.speed=.45;this.scale=1;this.playing=!matchMedia('(prefers-reduced-motion: reduce)').matches;this.replay();}
     replay(){
       this.time=0;this.phase=0;this.stage='initiation';this.waves=[];this.previous=[];
       this.sectors=Array.from({length:SECTORS},(_,i)=>({angle:i*TAU/SECTORS,height:.85,age:10,pulse:0,state:'fresh'}));
-      this.passages=[];this.samples=[];this.sampleTime=0;this.luminosity=0;this.interaction=0;this.buildWaves();
+      this.passages=[];this.samples=[];this.sampleTime=0;this.luminosity=0;this.interaction=0;
+      this.revRate=model.revRate;this.fillAhead=.85;this.lumGlow=0;this.peakHold=[0,0,0,0];this.lumHold=0;
+      this.buildWaves();
     }
+    sectorAt(angle){return this.sectors[Math.round(wrap(angle)/(TAU/SECTORS))%SECTORS];}
+    // Fill expected just ahead of each front for the current wave count (used for colouring and L/h).
+    expectedFill(count=this.waves.length||1){return clamp(model.fillRate*(1/(this.revRate*count)-model.injectorDelay),0,1);}
     requestedCount(){return {one:1,two:2,three:3,counter:2}[this.mode];}
-    buildWaves(){
+    activeCount(){
       let count=this.requestedCount();
       if(this.time<.75)count=1;
       if(this.nonideal&&this.time>3.2&&this.mode!=='counter'&&Math.floor((this.time-3.2)/2.8)%3===0)count=count===3?2:count+1;
-      const energy=clamp(this.time/.95,.12,1);
+      return count;
+    }
+    buildWaves(){
+      const count=this.activeCount();
+      const ramp=clamp(this.time/.95,.12,1);
       this.stage=this.time<.75?'initiation':this.time<3.0?'transient':'stable';
       const transient=this.stage==='transient'?.075*Math.sin(this.time*7)*(1-(this.time-.75)/2.25):0;
+      let fillSum=0;
       this.waves=Array.from({length:count},(_,i)=>{
         const direction=this.mode==='counter'&&i===1?-1:1;
         const jitter=this.nonideal?.09*Math.sin(this.time*2.1+i*2.4):0;
         const angle=wrap(-2.36+direction*this.phase+i*TAU/count+transient*(i+1)+jitter);
         const loss=this.nonideal?.18*(.5+.5*Math.sin(angle*3+this.time)):0;
-        return {angle,direction,energy:energy*(1-loss)};
+        const energy=ramp*(1-loss);
+        // The front can only be as tall as the fresh layer it is about to consume (sampled before passage);
+        // it never extends into the products above, which cannot burn again.
+        const ahead=this.sectorAt(angle+direction*2*TAU/SECTORS).height;
+        fillSum+=ahead;
+        return {angle,direction,energy,fill:ahead,frontHeight:layerUnits(ahead)*(.55+.45*energy),strength:energy*(.35+.65*ahead)};
       });
+      this.fillAhead=count?fillSum/count:0;
       this.interaction=this.mode==='counter'&&count===2?Math.exp(-Math.pow(distance(this.waves[0].angle,this.waves[1].angle)/.17,2)):0;
     }
     update(wallDt,force=false){
@@ -155,48 +188,59 @@ document.getElementById('retry').addEventListener('click',()=>location.reload())
     }
     integrate(dt){
       const oldWaves=this.waves.map(w=>({...w}));
-      this.time+=dt;this.phase=wrap(this.phase+TAU*.64*dt);this.buildWaves();
+      this.revRate=model.revRate*(1-model.speedDeficit*(1-clamp(this.fillAhead,0,1)));
+      this.time+=dt;this.phase=wrap(this.phase+TAU*this.revRate*dt);this.buildWaves();
       const changed=oldWaves.length!==this.waves.length;
       if(changed)this.passages=[];
-      const period=1/(.64*Math.max(1,this.waves.length)),delay=.10*period,tau=.26*period;
-      let brightness=0;
+      const period=1/(this.revRate*Math.max(1,this.waves.length)),expected=this.expectedFill();
       this.sectors.forEach((s,index)=>{
         s.age+=dt;s.pulse*=Math.exp(-dt/(period*.12));
-        let front=0,passed=false;
+        let front=0,passed=false,strength=0;
         this.waves.forEach((w,i)=>{
           const d=distance(s.angle,w.angle);
-          const pulse=Math.exp(-Math.pow(d/.085,2))*w.energy;
-          front=Math.max(front,pulse);
+          front=Math.max(front,Math.exp(-Math.pow(d/.085,2))*w.strength);
           if(!changed&&oldWaves[i]){
             const travel=wrap(w.direction*(w.angle-oldWaves[i].angle));
             const toSector=wrap(w.direction*(s.angle-oldWaves[i].angle));
-            if(travel<TAU*.25&&toSector>0&&toSector<=travel)passed=true;
+            if(travel<TAU*.25&&toSector>0&&toSector<=travel){passed=true;strength=Math.max(strength,w.energy);}
           }
         });
         if(passed){
-          s.pulse=Math.max(s.pulse,.55+.45*s.height);s.height*=.04;s.age=0;
+          // pulse scales with the layer actually consumed, read before it is consumed
+          s.pulse=Math.max(s.pulse,strength*(.35+.65*s.height));s.height*=.04;s.age=0;
           if(index===0&&(this.passages.length===0||this.time-this.passages[this.passages.length-1]>.045)){
             this.passages.push(this.time);if(this.passages.length>10)this.passages.shift();
           }
         }
-        if(s.age>delay){
-          let target=1;
-          if(this.nonideal)target=.76+.18*Math.sin(s.angle*3+this.time*.6);
-          s.height+=(target-s.height)*(1-Math.exp(-dt/tau));
+        if(s.age>model.injectorDelay){
+          let rate=model.fillRate;
+          if(this.nonideal)rate*=.82+.18*Math.sin(s.angle*3+this.time*.6);
+          s.height+=rate*dt;
           if(this.nonideal)s.height-=dt*.08*(.5+.5*Math.sin(s.angle*5-this.time));
         }
         s.height=clamp(s.height,0,1);
-        s.pulse=clamp(Math.max(s.pulse,front*(.63+.37*s.height)),0,1);
-        s.state=front>.55?'front':s.age<.24*period?'products':s.height<.67?'recovery':'fresh';
-        brightness+=front*.02;
+        s.pulse=clamp(Math.max(s.pulse,front),0,1);
+        s.state=front>.55*Math.max(.2,expected)?'front':s.age<.24*period?'products':s.height<.67*expected?'recovery':'fresh';
       });
-      this.luminosity=clamp(.10+brightness+.13*Math.sin(this.phase*2)**2+(this.nonideal?.11*(.5+.5*Math.sin(this.time*8.7)):0),0,1);
+      // Luminosity proxy: one optical port viewing a fixed arc. Each front crossing the arc adds light in
+      // proportion to its strength, followed by a short product afterglow, so the dominant frequency is
+      // the wave-passage frequency n*fRev, not a fixed harmonic of the revolution.
+      let view=0;
+      this.waves.forEach(w=>{view+=w.strength*Math.exp(-Math.pow(distance(w.angle,model.viewCentre)/model.viewHalfWidth,2));});
+      this.lumGlow=Math.max(this.lumGlow*Math.exp(-dt/(period*.25)),view);
+      this.luminosity=clamp(.06+.80*this.lumGlow+(this.nonideal?.08*(.5+.5*Math.sin(this.time*8.7)):0),0,1);
+      // peak-hold between samples so the traces show true peaks instead of whatever the sample instant hit
+      model.probeSectors.forEach((i,j)=>{this.peakHold[j]=Math.max(this.peakHold[j],this.sectors[i].pulse);});
+      this.lumHold=Math.max(this.lumHold,this.luminosity);
       if(this.time-this.sampleTime>=.026){
         this.sampleTime=this.time;
-        this.samples.push({t:this.time,p:[0,18,36,54].map(i=>this.sectors[i].pulse),l:this.luminosity});
+        this.samples.push({t:this.time,p:this.peakHold.slice(),l:this.lumHold});
+        this.peakHold=model.probeSectors.map(i=>this.sectors[i].pulse);this.lumHold=this.luminosity;
         while(this.samples.length&&this.time-this.samples[0].t>6)this.samples.shift();
       }
     }
+    // wave spacing over fresh-layer height ahead of the fronts (drawing units, dimensionless)
+    spacingRatio(){const n=this.waves.length;if(!n)return null;return (TAU*model.meanRadius/n)/layerUnits(this.fillAhead);}
     consistency(){
       if(this.passages.length<4)return null;
       const intervals=this.passages.slice(1).map((t,i)=>t-this.passages[i]);
@@ -379,7 +423,7 @@ document.getElementById('retry').addEventListener('click',()=>location.reload())
       for(let i=0;i<3;i++){
         const w=model.waves[i];this.fronts[i].enabled=!!w;this.shocks[i].enabled=!!w;
         if(!w)continue;
-        const height=drawing.frontMin+drawing.frontSpan*w.energy;
+        const height=w.frontHeight;
         this.fronts[i].setLocalPosition(0,0,-2.20);this.fronts[i].setLocalEulerAngles(0,0,w.angle*DEG);this.fronts[i].setLocalScale(1,1,height);
         this.shocks[i].setLocalPosition(0,0,-2.20+height);this.shocks[i].setLocalEulerAngles(0,0,w.angle*DEG);this.shocks[i].setLocalScale(1,w.direction,1);
         this.waveMats[i].setParameter('uTime',model.time);this.waveMats[i].setParameter('uAlpha',w.energy*(.64-.18*model.interaction));
@@ -388,7 +432,7 @@ document.getElementById('retry').addEventListener('click',()=>location.reload())
       this.initiationGlow.enabled=model.stage==='initiation';
       this.initiationGlow.setLocalScale(.34,.34,.34);
       this.wallLoss.enabled=model.nonideal;
-      this.probeMarkers.forEach((probe,i)=>{const p=model.sectors[i*18].pulse;probe.material.emissive.set(.04+p*.35,.12+p*.45,.17+p*.70);probe.material.update();});
+      this.probeMarkers.forEach((probe,i)=>{const p=model.sectors[i*SECTORS/4].pulse;probe.material.emissive.set(.04+p*.35,.12+p*.45,.17+p*.70);probe.material.update();});
       this.updateParticles();
     }
     updateParticles(){
@@ -485,7 +529,7 @@ document.getElementById('retry').addEventListener('click',()=>location.reload())
       });
       c.globalAlpha=1;
       this.model.waves.forEach(wave=>{
-        const frontX=x+wave.angle/TAU*width,frontLength=drawing.frontMin+drawing.frontSpan*wave.energy;
+        const frontX=x+wave.angle/TAU*width,frontLength=wave.frontHeight;
         const frontY=bottom-frontLength/drawing.axialSpan*height,shockY=bottom-(frontLength+drawing.shockAxial)/drawing.axialSpan*height;
         c.strokeStyle=this.dark?'#ffbec5':'#a82e43';c.lineWidth=2.1;c.beginPath();c.moveTo(frontX,bottom);c.lineTo(frontX,frontY);c.stroke();
         c.strokeStyle=this.dark?'#69c4ed':'#176f9c';c.lineWidth=1;c.setLineDash([3,3]);
@@ -618,7 +662,7 @@ document.getElementById('retry').addEventListener('click',()=>location.reload())
       $('stage-status').textContent='Abstract startup progression / not an initiation sequence.';
       document.querySelectorAll('[data-stage]').forEach(node=>node.classList.toggle('active',node.dataset.stage===m.stage));
       $('model-warning').textContent=m.mode==='counter'?'Counter-rotation and collisions are illustrative, not a stable-solution claim.':m.nonideal?'Mixing / parasitic burning / leakage / wall loss / mode switching: qualitative only.':'No dimensional or operating values are represented.';
-      $('sector-state').textContent={fresh:'Fresh fill',front:'Front passage',products:'Products',recovery:'Recovery / refill'}[m.sectors[0].state];$('fresh-readout').textContent=m.sectors[0].height.toFixed(2);
+      $('sector-state').textContent={fresh:'Fresh fill',front:'Front passage',products:'Products',recovery:'Recovery / refill'}[m.sectors[0].state];$('fresh-readout').textContent=m.sectors[0].height.toFixed(2);$('fill-ahead').textContent=m.fillAhead.toFixed(2);const lh=m.spacingRatio();$('lh-readout').textContent=lh===null?'-':lh.toFixed(1);
       const consistency=m.consistency();$('consistency').textContent=consistency===null?'Collecting passes':consistency.toFixed(2)+' / 1';$('consistency-meter').style.width=(consistency===null?0:consistency*100)+'%';
       $('trace-caveat').textContent=m.mode==='counter'?'Counter-mode intervals include both directions. Regularity is not proof of a stable physical mode.':'Regularity is a property of this animation, not evidence of detonation.';
       $('view-note').textContent=this.engine.explodeTarget>.01?'Exploded layout is not an operating arrangement. Flow stays in the chamber reference frame. All design details: TBD: set by reviewed design.':this.engine.mode==='solid'?'Solid walls intentionally occlude internal flow. Choose Glass or Half-shell cut to inspect it. Design details: TBD: set by reviewed design.':'TBD: set by reviewed design. No injector patterns, initiation methods or operational procedures are represented.';
