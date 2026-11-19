@@ -1,13 +1,8 @@
 title: Rotary-Detonation-Engine
 description: "Conceptual planning and visualisation materials for a university rotating detonation engine demonstrator: project atlas, schedule, PlayCanvas 3D viewer."
-author: Avinash Chandra Gupta
+author:
+  name: Avinash Chandra Gupta
+  url: https://avinashistoocool.github.io/
 theme: jekyll-theme-primer
 plugins:
   - jekyll-seo-tag
-social:
-  name: Avinash Chandra Gupta
-  links:
-    - https://github.com/Avinashistoocool
-    - https://www.linkedin.com/in/avinashistoocool
-    - https://x.com/suprcoolavinash
-    - https://buymeacoffee.com/avinashistoocool
