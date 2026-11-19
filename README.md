@@ -72,4 +72,4 @@ PlayCanvas is an external, MIT-licensed runtime. Its exact version and CDN integ
 
 ---
 
-[&larr; avinash](https://avinashistoocool.github.io/) &middot; [All projects](https://avinashistoocool.github.io/projects/) &middot; [Source](https://github.com/Avinashistoocool/Rotary-Detonation-Engine)
+By [Avinash Chandra Gupta](https://avinashistoocool.github.io/) &middot; [All projects](https://avinashistoocool.github.io/projects/) &middot; [Source](https://github.com/Avinashistoocool/Rotary-Detonation-Engine)
