@@ -69,3 +69,7 @@ The pressure-style and luminosity-style traces are **ILLUSTRATIVE, NOT DATA**. T
 PlayCanvas is an external, MIT-licensed runtime. Its exact version and CDN integrity hash are specified in the HTML.
 
 **Conceptual illustration. Not a design. Hardware design and hazardous operation require qualified institutional review.**
+
+---
+
+[&larr; avinash](https://avinashistoocool.github.io/) &middot; [All projects](https://avinashistoocool.github.io/projects/) &middot; [Source](https://github.com/Avinashistoocool/Rotary-Detonation-Engine)
